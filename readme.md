@@ -1,4 +1,4 @@
 ## duties
-+ Interpreter, API, Caralog Manager: xw
++ Interpreter, API, Catalog Manager: xw
 + Record Manager, Buffer Manager: lfy
 + Index Manager: fyh
