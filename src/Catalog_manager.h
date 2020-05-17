@@ -7,22 +7,15 @@
 #include <string>
 #include <vector>
 #include <map>
-
+#include "meta.h"
+#include "error.h"
 using namespace std;
 
-struct Table{
-    string table_name;
-    map<string, string> attrbutes;
-    string primary_key;
-};
-
-struct Database {
-    string database_name;
-    vector<Table> tables;
-};
-
 class catalog_manager {
-protected:
+private:
+
+public:
+
 
 };
 

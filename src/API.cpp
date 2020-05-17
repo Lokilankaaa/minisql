@@ -4,6 +4,8 @@
 
 #include "API.h"
 
+using namespace API;
+
 Error create_table(string &table_name, vector<string> &args);
 
 Error create_database(string &database_name);
