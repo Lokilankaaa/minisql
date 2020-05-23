@@ -15,6 +15,8 @@ class Interpreter : public Grammar {
 private:
     string script;
 
+    API api;
+
     static void normalize(std::string &one_sql);
 
     static std::string toLower(std::string str);

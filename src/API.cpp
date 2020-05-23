@@ -4,26 +4,30 @@
 
 #include "API.h"
 
-using namespace API;
+Error API::create_table(string &table_name, attributes_set &attrs, int pk) {
+    return catalogManager.createtable(table_name, attrs, pk);
+}
 
-Error create_table(string &table_name, vector<string> &args);
+Error API::create_index(std::string &index_name, std::string &table_name, std::string &column_name) {
+    return invalid_value;
+}
 
-Error create_database(string &database_name);
+Error API::drop_table(std::string &table_name) {
+    return catalogManager.droptable(table_name);
+}
 
-Error create_index(string &index_name, string &table_name, string &column_name);
+Error API::drop_index(std::string &index_name) {
+    return invalid_value;
+}
 
-Error drop_table(string &table_name);
+Error API::insert_table(std::string &table_name, std::vector<std::string> values) {
+    return invalid_value;
+}
 
-Error drop_database(string &database_name);
+Error API::select(std::string &table_name, std::vector<std::string> conditions) {
+    return invalid_value;
+}
 
-Error drop_index(string &index_name);
-
-Error insert_table(string &table_name, vector<string> values);
-
-Error select(string &table_name, vector<string> conditions);
-
-Error delete_table(string &table_name, vector<string> conditions);
-
-Error update_table();
-
-Error use_database(string &database_name);
+Error API::delete_table(std::string &table_name, std::vector<std::string> conditions) {
+    return invalid_value;
+}

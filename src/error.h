@@ -51,10 +51,6 @@ class e_tuple_type_conflict : public std::exception {
 
 };
 
-class e_primary_key_conflict : public std::exception {
-
-};
-
 class e_data_type_conflict : public std::exception {
 
 };

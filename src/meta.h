@@ -41,7 +41,7 @@ public:
 
     std::vector<data> getData() const;
 
-    int getTupleSize () const;
+    int getTupleSize() const;
 };
 
 class table {
@@ -57,13 +57,13 @@ public:
 
     table(const table &t);
 
-    Error addTuple(const TUPLE& t);
+    Error addTuple(const TUPLE &t);
 
     Error deleteTuple(int pos);
 
     //index func placeholder
 
-    const std::string& getTableName() const;
+    const std::string &getTableName() const;
 
     attributes_set getAttr() const;
 
@@ -87,7 +87,7 @@ public:
 
     Error addTable(table &t);
 
-    Error deleteTable(const std::string& name);
+    Error deleteTable(const std::string &name);
 };
 
 #endif //MINISQL_META_H

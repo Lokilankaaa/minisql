@@ -23,7 +23,7 @@ protected:
 public:
     Grammar();
 
-    static Error check_create_table(std::string &sql, std::map<std::string, std::string> &name_attr);
+    static Error check_create_table(std::string &sql, std::string &table_name, std::map<std::string, std::string> &name_attr);
 
     static Error check_select(std::string &sql, std::map<std::string, std::vector<std::string> > &clause_content);
 

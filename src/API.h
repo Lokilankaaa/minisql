@@ -7,30 +7,27 @@
 
 #include <string>
 #include "error.h"
+#include "Catalog_manager.h"
 
-using namespace std;
-namespace API {
-    Error create_table(string &table_name, vector<string> &args);
 
-    Error create_database(string &database_name);
+class API {
+protected:
+    catalog_manager catalogManager;
+public:
+    Error create_table(string &table_name, attributes_set &attrs, int pk);
 
-    Error create_index(string &index_name, string &table_name, string &column_name);
+    Error create_index(std::string &index_name, std::string &table_name, std::string &column_name);
 
-    Error drop_table(string &table_name);
+    Error drop_table(std::string &table_name);
 
-    Error drop_database(string &database_name);
+    Error drop_index(std::string &index_name);
 
-    Error drop_index(string &index_name);
+    Error insert_table(std::string &table_name, std::vector<std::string> values);
 
-    Error insert_table(string &table_name, vector<string> values);
+    Error select(std::string &table_name, std::vector<std::string> conditions);
 
-    Error select(string &table_name, vector<string> conditions);
+    Error delete_table(std::string &table_name, std::vector<std::string> conditions);
 
-    Error delete_table(string &table_name, vector<string> conditions);
-
-    Error update_table();
-
-    Error use_database(string &database_name);
-}
+};
 
 #endif //MINISQL_API_H
