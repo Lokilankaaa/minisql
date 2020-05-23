@@ -24,6 +24,14 @@ public:
     catalog_manager();
 
     ~catalog_manager() = default;
+
+    Error createtable(std::string &table_name, attributes_set &attrs, int pk);
+
+    Error droptable(std::string &table_name);
+
+    bool hastable(std::string &table_name);
+
+
 };
 
 #endif //MINISQL_CATALOG_MANAGER_H

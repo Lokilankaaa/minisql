@@ -39,10 +39,11 @@ int Grammar::str2num(std::string &str) {
     return atoi(str.c_str());
 }
 
-Error Grammar::check_create_table(std::string &sql, std::map<std::string, std::string> &name_attr) {
+Error Grammar::check_create_table(std::string &sql, std::string &table_name,std::map<std::string, std::string> &name_attr) {
     auto split_res = split(sql, ' ');
     auto end_pos = split_res.size() - 1;
-    name_attr[split_res[2]] = num2str(0);//table name:primary key
+    table_name = split_res[2];
+    name_attr[table_name] = num2str(0);//table name:primary key
     if (split_res[3] == "(" and split_res[end_pos] == ")") {
         for (int i = 4; i <= end_pos;) {
             if (split_res[i] == "primary" and split_res[i + 1] == "key") {

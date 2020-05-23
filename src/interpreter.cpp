@@ -105,26 +105,88 @@ void Interpreter::execute() {
     }
 
     catch (const e_unknown_file_path &e) {
-        std::cout << ">>> Unknown file path!" << endl;
+        std::cout << ">>> Unknown file path!" << std::endl;
     }
-}
 
-void Interpreter::exec_select(string &sql) {
-    std::map<std::string, std::vector<std::string> > clause_content;
-    auto res = check_select(sql, clause_content);
-    if (res == successful) { ;
-    } else {
-        throw e_syntax_error();
+    catch (const e_table_exist &e) {
+        std::cout << ">>> table exists!" << std::endl;
+    }
+
+    catch (const e_table_not_exist &e) {
+        std::cout << ">>> table doesn't exist!" << std::endl;
     }
 }
 
 void Interpreter::exec_create_table(string &sql) {
     map<std::string, std::string> name_attr;
-    auto res = check_create_table(sql, name_attr);
-    if (res == successful) { ;
+    std::string table_name;
+    attributes_set attrs;
+    int pk = 0, cnt = 0;
+    auto res = check_create_table(sql, table_name, name_attr);
+    if (res == successful) {
+        map<std::string, int> tmp_at;
+        for (auto &i:name_attr) {
+            if (i.first != table_name) {
+                tmp_at[i.first] = cnt;
+                attrs.name[cnt] = i.first;
+                if (str2num(i.second) >= -1 and str2num(i.second) <= 255) {
+                    attrs.type[cnt] = str2num(i.second);
+                } else if (str2num(i.second) == -1000) {
+                    attrs.type[cnt] = -1;
+                    attrs.unique[cnt] = true;
+                } else if (str2num(i.second) == -100) {
+                    attrs.type[cnt] = 0;
+                    attrs.unique[cnt] = true;
+                } else {
+                    attrs.type[cnt] = str2num(i.second) / 1000;
+                    attrs.unique[cnt] = true;
+                }
+                cnt++;
+            }
+        }
+        pk = tmp_at[table_name];
+        if (api.create_table(table_name, attrs, pk) != successful)
+            throw e_table_exist();
     } else {
         throw e_syntax_error();
     }
+}
+
+void Interpreter::exec_drop_table(string &sql) {
+    std::string dropped_table;
+    auto res = check_drop_table(sql, dropped_table);
+    if (res == successful) {
+        if (api.drop_table(dropped_table) != successful)
+            throw e_table_not_exist();
+    } else {
+        throw e_syntax_error();
+    }
+}
+
+void Interpreter::execfile(string &sql) {
+    auto split_res = split(sql, ' ');
+    if (split_res.size() > 2)
+        throw e_syntax_error();
+    else {
+        fstream sql_file(split_res[1]);
+        if (sql_file.fail())
+            throw e_unknown_file_path();
+        else {
+            std::stringstream ss;
+            ss << sql_file.rdbuf();
+            std::string tmp = ss.str();
+            auto tmp_sqls = split(tmp, ';');
+            for (auto i = tmp_sqls.begin(); i < tmp_sqls.end(); ++i) {
+                normalize(*i);
+                script = *i;
+                execute();
+            }
+        }
+    }
+}
+
+void Interpreter::exec_quit() {
+    throw e_exit_command();
 }
 
 void Interpreter::exec_create_index(string &sql) {
@@ -136,14 +198,6 @@ void Interpreter::exec_create_index(string &sql) {
     }
 }
 
-void Interpreter::exec_drop_table(string &sql) {
-    std::string dropped_table;
-    auto res = check_drop_table(sql, dropped_table);
-    if (res == successful) { ;
-    } else {
-        throw e_syntax_error();
-    }
-}
 
 void Interpreter::exec_drop_index(string &sql) {
     std::string dropped_idx;
@@ -174,28 +228,12 @@ void Interpreter::exec_insert_table(string &sql) {
     }
 }
 
-void Interpreter::exec_quit() {
-    throw e_exit_command();
-}
-
-void Interpreter::execfile(string &sql) {
-    auto split_res = split(sql, ' ');
-    if (split_res.size() > 2)
+void Interpreter::exec_select(string &sql) {
+    std::map<std::string, std::vector<std::string> > clause_content;
+    auto res = check_select(sql, clause_content);
+    if (res == successful) { ;
+    } else {
         throw e_syntax_error();
-    else {
-        fstream sql_file(split_res[1]);
-        if (sql_file.fail())
-            throw e_unknown_file_path();
-        else {
-            std::stringstream ss;
-            ss << sql_file.rdbuf();
-            std::string tmp = ss.str();
-            auto tmp_sqls = split(tmp, ';');
-            for (auto i = tmp_sqls.begin(); i < tmp_sqls.end(); ++i) {
-                normalize(*i);
-                script = *i;
-                execute();
-            }
-        }
     }
 }
+
