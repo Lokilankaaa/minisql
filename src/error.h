@@ -19,6 +19,57 @@ enum Error {
     tuple_not_exist
 };
 
+class e_syntax_error : public std::exception {
+
+};
+
+class e_unknown_file_path : public std::exception {
+
+};
+
+class e_table_exist : public std::exception {
+
+};
+
+class e_table_not_exist : public std::exception {
+
+};
+
+class e_attribute_not_exist : public std::exception {
+
+};
+
+class e_index_exist : public std::exception {
+
+};
+
+class e_index_not_exist : public std::exception {
+
+};
+
+class e_tuple_type_conflict : public std::exception {
+
+};
+
+class e_primary_key_conflict : public std::exception {
+
+};
+
+class e_data_type_conflict : public std::exception {
+
+};
+
+class e_index_full : public std::exception {
+
+};
+
+class e_exit_command : public std::exception {
+
+};
+
+class e_unique_conflict : public std::exception {
+
+};
 
 
 #endif //MINISQL_ERROR_H

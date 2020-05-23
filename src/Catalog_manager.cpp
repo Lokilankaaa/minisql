@@ -3,3 +3,7 @@
 //
 
 #include "Catalog_manager.h"
+
+catalog_manager::catalog_manager():db("test") {
+
+}

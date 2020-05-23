@@ -27,15 +27,15 @@ struct attributes_set {
     bool has_index[32]; // whether the attribute has index
 };
 
-class tuple {
+class TUPLE {
 private:
     std::vector<data> Data;
 public:
-    tuple();
+    TUPLE();
 
-    ~tuple();
+    ~TUPLE();
 
-    tuple(const tuple &t);
+    TUPLE(const TUPLE &t);
 
     void addData(const data &d);
 
@@ -47,7 +47,7 @@ public:
 class table {
 private:
     std::string table_name;
-    std::vector<tuple> tuples;
+    std::vector<TUPLE> tuples;
     attributes_set attributesSet;
     //index placeholder
 public:
@@ -57,7 +57,7 @@ public:
 
     table(const table &t);
 
-    Error addTuple(const tuple& t);
+    Error addTuple(const TUPLE& t);
 
     Error deleteTuple(int pos);
 
@@ -67,7 +67,7 @@ public:
 
     attributes_set getAttr() const;
 
-    std::vector<tuple> getTuple() const;
+    std::vector<TUPLE> getTuple() const;
 
     int getKeypos() const;
 };
