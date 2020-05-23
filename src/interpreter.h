@@ -9,30 +9,42 @@
 #include <vector>
 #include "API.h"
 #include "Grammar.h"
-
-using namespace std;
+#include "Catalog_manager.h"
 
 class Interpreter : public Grammar {
 private:
     string script;
-    vector<string> sqls;
 
-    void parse();
+    static void normalize(std::string &one_sql);
 
-    static void _split_(const std::string &s, char delim, std::vector<std::string> &elems);
-
-    static std::vector<std::string> split(const std::string &s, char delim);
+    static std::string toLower(std::string str);
 
 public:
     Interpreter();
 
     ~Interpreter();
 
-    void get_script(string script);
+    void get_script();
 
     void execute();
 
-    void SELECT();
+    void exec_select(string &sql);
+
+    void exec_create_table(string &sql);
+
+    void exec_create_index(string &sql);
+
+    void exec_drop_table(string &sql);
+
+    void exec_drop_index(string &sql);
+
+    void exec_delete_table(string &sql);
+
+    void exec_insert_table(string &sql);
+
+    void exec_quit();
+
+    void execfile(string &sql);
 
 };
 

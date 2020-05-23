@@ -7,7 +7,10 @@
 
 int main(){
     Interpreter i;
-    string sql="create table test(id varchar(10), idd varchar(20));create table test2(id varchar(10), idd varchar(20));";
-    i.get_script(sql);
+    vector<std::string> tmp;
+//    string sql="create table test(id varchar(10), idd varchar(20));create table test2(id char(10), idd int);";
+    fstream f("./test.txt");
+    i.get_script();
+    i.execute();
     return 0;
 }

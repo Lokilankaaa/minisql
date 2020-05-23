@@ -6,23 +6,23 @@
 
 #include <utility>
 
-tuple::tuple() = default;
+TUPLE::TUPLE() = default;
 
-tuple::~tuple() = default;
+TUPLE::~TUPLE() = default;
 
-tuple::tuple(const tuple &t) {
+TUPLE::TUPLE(const TUPLE &t) {
     Data = t.Data;
 }
 
-void tuple::addData(const data &d) {
+void TUPLE::addData(const data &d) {
     Data.push_back(d);
 }
 
-std::vector<data> tuple::getData() const {
+std::vector<data> TUPLE::getData() const {
     return Data;
 }
 
-int tuple::getTupleSize() const {
+int TUPLE::getTupleSize() const {
     return Data.size();
 }
 
@@ -37,7 +37,7 @@ table::table(const table &t) {
     attributesSet = t.attributesSet;
 }
 
-Error table::addTuple(const tuple &t) {
+Error table::addTuple(const TUPLE &t) {
     if (t.getTupleSize() != attributesSet.num) {
         return illegal_tuple_insert;
     } else {
@@ -59,7 +59,7 @@ attributes_set table::getAttr() const {
     return attributesSet;
 }
 
-std::vector<tuple> table::getTuple() const {
+std::vector<TUPLE> table::getTuple() const {
     return tuples;
 }
 

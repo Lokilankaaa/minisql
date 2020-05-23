@@ -4,19 +4,26 @@
 
 #ifndef MINISQL_CATALOG_MANAGER_H
 #define MINISQL_CATALOG_MANAGER_H
+
+#include <fstream>
 #include <string>
 #include <vector>
 #include <map>
 #include "meta.h"
 #include "error.h"
+#include <algorithm>
+
 using namespace std;
+
+const string CATALOG_FILE_PATH = "./database/catalog/cata_file";
 
 class catalog_manager {
 private:
-
+    database db;
 public:
+    catalog_manager();
 
-
+    ~catalog_manager() = default;
 };
 
 #endif //MINISQL_CATALOG_MANAGER_H
