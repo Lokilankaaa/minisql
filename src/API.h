@@ -13,6 +13,8 @@
 class API {
 protected:
     catalog_manager catalogManager;
+
+
 public:
     Error create_table(string &table_name, attributes_set &attrs, int pk);
 
