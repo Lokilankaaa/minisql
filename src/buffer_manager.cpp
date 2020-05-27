@@ -5,9 +5,6 @@
 #include "buffer_manager.h"
 
 //两个构造函数都通过调用initialize函数来进行初始化，以做到统一标准
-BufferManager::BufferManager() {
-    initialize(MAXFRAMESIZE);
-}
 BufferManager::BufferManager(int frame_size) {
     initialize(frame_size);
 }

@@ -27,7 +27,7 @@ struct attributes_set {
     int num;//number of attributes
     std::string name[32]; //name of each attribute
     int type[32]; // type of each attribute
-    bool unique[32]; // whether it's unique
+    bool unique[32]{false}; // whether it's unique
     int primary_key; // -1 means no primary key, other means the position of key
     bool has_index[32]; // whether the attribute has index
 };
@@ -77,22 +77,5 @@ public:
     int getKeypos() const;
 };
 
-class database {
-private:
-    std::string database_name;
-    std::vector<table> tables;
-public:
-    explicit database(std::string name);
-
-    ~database();
-
-    bool checkTable(const std::string &table_name);
-
-    table getTable(const std::string &table_name);
-
-    Error addTable(table &t);
-
-    Error deleteTable(const std::string &name);
-};
 
 #endif //MINISQL_META_H

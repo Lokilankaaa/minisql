@@ -129,6 +129,7 @@ void Interpreter::exec_create_table(string &sql) {
             if (i.first != table_name) {
                 tmp_at[i.first] = cnt;
                 attrs.name[cnt] = i.first;
+                attrs.num++;
                 if (str2num<int>(i.second) >= -1 and str2num<int>(i.second) <= 255) {
                     attrs.type[cnt] = str2num<int>(i.second);
                 } else if (str2num<int>(i.second) == -1000) {
@@ -142,11 +143,16 @@ void Interpreter::exec_create_table(string &sql) {
                     attrs.unique[cnt] = true;
                 }
                 cnt++;
+            } else {
+                tmp_at[table_name] = tmp_at[name_attr[table_name]];
             }
         }
         pk = tmp_at[table_name];
         if (api.create_table(table_name, attrs, pk) != successful)
             throw e_table_exist();
+        else {
+            std::cout << "Success!" << endl;
+        }
     } else {
         throw e_syntax_error();
     }

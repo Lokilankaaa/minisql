@@ -19,6 +19,7 @@
 
 //最大页数为100，用于默认构造函数
 #define MAXFRAMESIZE 100
+#define MAXPAGESIZE 4096
 
 #include "buffer_manager_page.h"
 #include <string>
@@ -27,8 +28,7 @@
 class BufferManager {
 public:
     //构造函数，默认构造函数构造最大的缓冲池，重构的构造函数根据frame_size构造缓冲池
-    BufferManager();
-    BufferManager(int frame_size);
+    explicit BufferManager(int frame_size = MAXFRAMESIZE);
     //析构函数
     ~BufferManager();
     // 通过页号得到页的句柄(一个页的头地址)，可以读取修改其中的内容
@@ -40,9 +40,6 @@ public:
     // 解除一个页的钉住状态(需要注意的是一个页可能被多次钉住，该函数只能解除一次)
     // 如果对应页的allPinNum为0，则返回-1，表示改页没有被钉住
     int unpinPage(int page_id);
-    // 将对应内存页写入对应文件的对应块。这里的返回值为0或-1，代表文件是否成功被打开
-    // 但是因为函数内部通过r+打开文件，这是总能成功的，因此返回值无太大意义
-    int flushPage(int page_id , std::string file_name , int block_id);
     // 获取对应文件的对应块在内存中的页号，没有找到返回-1
     int getPageId(std::string file_name , int block_id);
 private:
@@ -55,6 +52,9 @@ private:
     int getEmptyPageId();
     //将对应文件的对应块载入对应的内存页，文件不存在返回-1，否则返回1
     int loadDiskBlock(int page_id , std::string file_name , int block_id);
+    // 将对应内存页写入对应文件的对应块。这里的返回值为0或-1，代表文件是否成功被打开
+    // 但是因为函数内部通过r+打开文件，这是总能成功的，因此返回值无太大意义
+    int flushPage(int page_id , std::string file_name , int block_id);
 };
 
 

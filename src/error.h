@@ -16,6 +16,7 @@ enum Error {
     illegal_tuple_insert,
     insert_table_exist,
     table_not_exist,
+    table_exist,
     tuple_not_exist
 };
 

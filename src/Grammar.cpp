@@ -8,7 +8,7 @@
 
 Grammar::Grammar() = default;
 
-void Grammar::_split_(const std::string &s, char delim, std::vector<std::string> &elems) {
+void split_(const std::string &s, char delim, std::vector<std::string> &elems) {
     std::stringstream ss(s);
     std::string item;
     while (getline(ss, item, delim)) {
@@ -16,9 +16,9 @@ void Grammar::_split_(const std::string &s, char delim, std::vector<std::string>
     }
 }
 
-std::vector<std::string> Grammar::split(const std::string &s, char delim) {
+std::vector<std::string> split(const std::string &s, char delim) {
     std::vector<std::string> elems;
-    _split_(s, delim, elems);
+    split_(s, delim, elems);
     for (auto i = elems.begin(); i < elems.end();) {
         if ((*i).empty()) {
             elems.erase(i);

@@ -13,11 +13,6 @@
 
 
 class Grammar {
-protected:
-    static void _split_(const std::string &s, char delim, std::vector<std::string> &elems);
-
-    static std::vector<std::string> split(const std::string &s, char delim);
-
 public:
     Grammar();
 
@@ -41,7 +36,10 @@ public:
 
 template<class type>
 std::string num2str(type num) {
-    return std::to_string(num);
+    std::string tmp;
+    if(num < 0)
+        tmp += "-", num = -num;
+    return tmp+std::to_string(num);
 }
 
 template<class type>
@@ -51,6 +49,10 @@ type str2num(std::string &str) {
     iss >> n;
     return n;
 }
+
+static void split_(const std::string &s, char delim, std::vector<std::string> &elems);
+
+std::vector<std::string> split(const std::string &s, char delim);
 
 
 #endif //MINISQL_GRAMMAR_H

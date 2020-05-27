@@ -11,27 +11,31 @@
 #include <map>
 #include "meta.h"
 #include "error.h"
+#include "buffer_manager.h"
 #include <algorithm>
 
 using namespace std;
 
 const string CATALOG_FILE_PATH = "./database/catalog/cata_file";
 
+extern BufferManager buf_manager;
+
 class catalog_manager {
 private:
-    database db;
+    static int getBlockNum(const std::string &file_name);
+
 public:
-    catalog_manager();
+    catalog_manager() = default;
 
     ~catalog_manager() = default;
 
-    Error createtable(std::string &table_name, attributes_set &attrs, int pk);
+    static Error createtable(std::string &table_name, attributes_set &attrs, int pk);
 
-    Error droptable(std::string &table_name);
+    static Error droptable(std::string &table_name);
 
-    bool hastable(std::string &table_name);
+    static int hastable(std::string &table_name);
 
-
+    static Error createindex(std::string &table_name, std::string &attr_name, std::string & index_name);
 };
 
 #endif //MINISQL_CATALOG_MANAGER_H
