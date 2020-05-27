@@ -121,7 +121,7 @@ void Interpreter::exec_create_table(string &sql) {
     map<std::string, std::string> name_attr;
     std::string table_name;
     attributes_set attrs;
-    int pk = 0, cnt = 0;
+    int pk, cnt = 0;
     auto res = check_create_table(sql, table_name, name_attr);
     if (res == successful) {
         map<std::string, int> tmp_at;
@@ -129,16 +129,16 @@ void Interpreter::exec_create_table(string &sql) {
             if (i.first != table_name) {
                 tmp_at[i.first] = cnt;
                 attrs.name[cnt] = i.first;
-                if (str2num(i.second) >= -1 and str2num(i.second) <= 255) {
-                    attrs.type[cnt] = str2num(i.second);
-                } else if (str2num(i.second) == -1000) {
+                if (str2num<int>(i.second) >= -1 and str2num<int>(i.second) <= 255) {
+                    attrs.type[cnt] = str2num<int>(i.second);
+                } else if (str2num<int>(i.second) == -1000) {
                     attrs.type[cnt] = -1;
                     attrs.unique[cnt] = true;
-                } else if (str2num(i.second) == -100) {
+                } else if (str2num<int>(i.second) == -100) {
                     attrs.type[cnt] = 0;
                     attrs.unique[cnt] = true;
                 } else {
-                    attrs.type[cnt] = str2num(i.second) / 1000;
+                    attrs.type[cnt] = str2num<int>(i.second) / 1000;
                     attrs.unique[cnt] = true;
                 }
                 cnt++;

@@ -4,7 +4,6 @@
 
 #include <sstream>
 #include "Grammar.h"
-#include <cstdlib>
 
 
 Grammar::Grammar() = default;
@@ -31,15 +30,8 @@ std::vector<std::string> Grammar::split(const std::string &s, char delim) {
     return elems;
 }
 
-std::string Grammar::num2str(int num) {
-    return std::to_string(num);
-}
-
-int Grammar::str2num(std::string &str) {
-    return atoi(str.c_str());
-}
-
-Error Grammar::check_create_table(std::string &sql, std::string &table_name,std::map<std::string, std::string> &name_attr) {
+Error
+Grammar::check_create_table(std::string &sql, std::string &table_name, std::map<std::string, std::string> &name_attr) {
     auto split_res = split(sql, ' ');
     auto end_pos = split_res.size() - 1;
     table_name = split_res[2];
@@ -79,8 +71,8 @@ Error Grammar::check_create_table(std::string &sql, std::string &table_name,std:
                     name_attr[split_res[i]] = num2str(0);
                     i += (s == 0 ? 2 : 3);
                 } else {
-                    if (split_res[i + 2] == "(" and split_res[i + 4] == ")" and str2num(split_res[i + 3])) {
-                        int s = str2num(split_res[i + 3]);
+                    if (split_res[i + 2] == "(" and split_res[i + 4] == ")" and str2num<int>(split_res[i + 3])) {
+                        int s = str2num<int>(split_res[i + 3]);
                         if (split_res[i + 5] == "unique")
                             s *= 1000;
                         name_attr[split_res[i]] = num2str(s);

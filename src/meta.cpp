@@ -42,8 +42,8 @@ Error table::addTuple(const TUPLE &t) {
         return illegal_tuple_insert;
     } else {
         for (int i = 0; i < attributesSet.num; ++i) {
-            if (t.getData()[i].type > attributesSet.type[i] ||
-                t.getData()[i].type <= attributesSet.type[i] && t.getData()[i].type != attributesSet.type[i])
+            if ((t.getData()[i].type > attributesSet.type[i]) ||
+                    (t.getData()[i].type <= attributesSet.type[i] && t.getData()[i].type != attributesSet.type[i]))
                 return illegal_tuple_insert;
         }
     }

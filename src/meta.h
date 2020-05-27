@@ -18,6 +18,11 @@ struct data {
     std::string char_data;
 };
 
+struct Index {
+    int num;
+
+};
+
 struct attributes_set {
     int num;//number of attributes
     std::string name[32]; //name of each attribute
