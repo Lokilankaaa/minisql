@@ -3,12 +3,16 @@
 //
 
 #include "src/interpreter.h"
+#include "src/buffer_manager.h"
 #include <iostream>
+
+BufferManager buf_manager;
 
 int main(){
     Interpreter i;
-//    string sql="create table test(id varchar(10), idd varchar(20));create table test2(id char(10), idd int);";
-    i.get_script();
-    i.execute();
+    while (true) {
+        i.get_script();
+        i.execute();
+    }
     return 0;
 }
