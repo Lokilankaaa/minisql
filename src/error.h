@@ -17,12 +17,8 @@ enum Error {
     insert_table_exist,
     table_not_exist,
     table_exist,
-<<<<<<< HEAD
     tuple_not_exist,
     attr_not_exist
-=======
-    tuple_not_exist
->>>>>>> lfy_dev
 };
 
 class e_syntax_error : public std::exception {
@@ -73,12 +69,10 @@ class e_unique_conflict : public std::exception {
 
 };
 
-<<<<<<< HEAD
-=======
 //lfy: add e_primary_key_conflict to represent primary key conflict
 class e_primary_key_conflict : public std::exception{
 
 };
->>>>>>> lfy_dev
+
 
 #endif //MINISQL_ERROR_H

@@ -6,8 +6,6 @@
 #define MINISQL_BUFFER_RECORD_RECORD_MANAGER_H
 
 
-
-
 //RecordManager类: 为API提供接口，直接对记录、文件进行操作
 /* 接口说明：
  * createTableFile(表名) 可以创建一张表
@@ -21,9 +19,6 @@
  *
  * 详细信息见下面个函数说明
  */
-
-
-
 
 
 #include <iostream>

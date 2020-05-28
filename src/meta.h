@@ -8,19 +8,21 @@
 #include <string>
 #include <vector>
 #include "error.h"
+#include "Grammar.h"
 
 
 // type == -1:int, 0:float, 1-255:char
 struct data {
     int type;
-    int int_data;
-    float float_data;
+    int int_data{0};
+    float float_data{0};
     std::string char_data;
 };
 
 struct Index {
-    int num;
-
+    int num{0};
+    int location[10];
+    std::string name[10];
 };
 
 struct attributes_set {
@@ -29,7 +31,6 @@ struct attributes_set {
     int type[32]; // type of each attribute
     bool unique[32]{false}; // whether it's unique
     int primary_key; // -1 means no primary key, other means the position of key
-    bool has_index[32]; // whether the attribute has index
 };
 
 class TUPLE {

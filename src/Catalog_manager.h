@@ -14,9 +14,7 @@
 #include "buffer_manager.h"
 #include <algorithm>
 
-using namespace std;
-
-const string CATALOG_FILE_PATH = "./database/catalog/cata_file";
+#define CATALOG_FILE_PATH "./database/catalog/cata_file"
 
 extern BufferManager buf_manager;
 
@@ -26,18 +24,24 @@ private:
 
     static bool hasattribute(std::string &table_name, std::string &attr_name);
 
+    static int hastable(std::string &table_name);
+
 public:
     catalog_manager() = default;
 
     ~catalog_manager() = default;
 
-    static Error createtable(std::string &table_name, attributes_set &attrs, int pk);
+    static Error createtable(std::string &table_name, attributes_set &attrs, Index &index, int pk);
 
     static Error droptable(std::string &table_name);
 
-    static int hastable(std::string &table_name);
+    static Error createindex(std::string &table_name, std::string &attr_name, std::string &index_name);
 
-    static Error createindex(std::string &table_name, std::string &attr_name, std::string & index_name);
+    static Error dropindex(std::string &table_name, std::string &index_name);
+
+    static attributes_set getAllattrs(std::string &table_name);
+
+    static Index getAllindex(std::string &table_name);
 };
 
 #endif //MINISQL_CATALOG_MANAGER_H

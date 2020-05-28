@@ -200,7 +200,7 @@ Error Grammar::check_insert_table(std::string &sql, std::string &table, std::vec
     if (split_res[1] == "into" and split_res[3] == "values" and split_res[4] == "(" and
         split_res[split_res.size() - 1] == ")") {
         table = split_res[2];
-        for (int i = 5; i < split_res.size(); ++i) {
+        for (int i = 5; i < split_res.size() - 1; ++i) {
             if (split_res[i] == ",")
                 continue;
             else if (split_res[i] == "'") {

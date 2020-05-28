@@ -4,7 +4,6 @@
 
 #include "src/interpreter.h"
 #include "src/buffer_manager.h"
-#include <iostream>
 
 BufferManager buf_manager;
 
