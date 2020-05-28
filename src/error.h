@@ -17,7 +17,8 @@ enum Error {
     insert_table_exist,
     table_not_exist,
     table_exist,
-    tuple_not_exist
+    tuple_not_exist,
+    attr_not_exist
 };
 
 class e_syntax_error : public std::exception {

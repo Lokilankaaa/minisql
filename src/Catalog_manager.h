@@ -24,6 +24,8 @@ class catalog_manager {
 private:
     static int getBlockNum(const std::string &file_name);
 
+    static bool hasattribute(std::string &table_name, std::string &attr_name);
+
 public:
     catalog_manager() = default;
 
