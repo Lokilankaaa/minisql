@@ -1,0 +1,14 @@
+//
+// Created by 陆飞洋 on 2020/5/27.
+//
+
+#ifndef MINISQL_BUFFER_RECORD_INDEX_MANAGER_H
+#define MINISQL_BUFFER_RECORD_INDEX_MANAGER_H
+
+
+class IndexManager {
+
+};
+
+
+#endif //MINISQL_BUFFER_RECORD_INDEX_MANAGER_H
