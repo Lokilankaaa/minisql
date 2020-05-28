@@ -112,6 +112,7 @@ int catalog_manager::getBlockNum(const string &file_name) {
     return num;
 }
 
+
 bool catalog_manager::hasattribute(string &table_name, string &attr_name) {
     auto block_num = hastable(table_name);
     auto buffer = buf_manager.getPage(CATALOG_FILE_PATH, block_num);
@@ -129,3 +130,4 @@ Error catalog_manager::createindex(string &table_name, string &attr_name, string
     if (!hasattribute(table_name, attr_name))
         return attr_not_exist;
 }
+

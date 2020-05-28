@@ -78,4 +78,32 @@ public:
 };
 
 
+//lfy: add structure 'Constraint' for 'where (conditions)'
+
+// 举例：如果想要获得老师工作大于10000的记录
+/* std::string temp_attr;
+ * data temp_data;
+ * Constraint temp_con;
+ *
+ * temp_attr = std::string("salary");
+ * temp_data.type = -1; temp_data.int_data = 10000;
+ * temp_con.data = temp_data; temp_con.conSymbol = MORE;
+ *
+ * table resTable = selectRecord(table_name, temp_attr, temp_con);
+ */
+typedef enum{
+    LESS,
+    LESS_OR_EQUAL,
+    EQUAL,
+    MORE_OR_EQUAL,
+    MORE,
+    NOT_EQUAL
+}CONSTRAINT;
+
+struct Constraint{
+    data conData;               //Data for relationship constraints
+    CONSTRAINT conSymbol;       //Symbols of relation constraints
+};
+
+
 #endif //MINISQL_META_H
