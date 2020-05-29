@@ -218,4 +218,5 @@ Error catalog_manager::dropindex(std::string &table_name, std::string &index_nam
             return successful;
         }
     }
+    return successful;
 }

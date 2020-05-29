@@ -3,4 +3,6 @@ project(minisql)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(minisql main.cpp src/API.h src/API.cpp src/interpreter.cpp src/interpreter.h src/Catalog_manager.cpp src/Catalog_manager.h src/Grammar.cpp src/Grammar.h src/meta.h src/meta.cpp src/error.h src/buffer_manager.cpp src/buffer_manager.h src/buffer_manager_page.h src/buffer_manager_page.cpp src/record_function.h src/record_manager.cpp src/record_manager.h src/index_manager.h)
+aux_source_directory(src DIR_SRC)
+
+add_executable(${PROJECT_NAME} main.cpp ${DIR_SRC})
