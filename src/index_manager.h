@@ -1,12 +1,6 @@
-//
-// Created by 薛伟 on 2020/5/30.
-//
-
 #ifndef MINISQL_INDEX_MANAGER_H
 #define MINISQL_INDEX_MANAGER_H
 
-
-#pragma once
 #include <sstream>
 #include <string>
 #include <map>

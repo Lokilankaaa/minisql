@@ -1,11 +1,3 @@
-//
-// Created by 薛伟 on 2020/5/30.
-//
-
-#include "index_manager.h"
-
-#pragma once
-
 #include "index_manager.h"
 #include "meta.h"
 #include "buffer_manager.h"
