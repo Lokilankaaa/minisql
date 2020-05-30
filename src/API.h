@@ -9,6 +9,7 @@
 #include "error.h"
 #include "Catalog_manager.h"
 #include "record_manager.h"
+#include "index_manager.h"
 
 
 class API {
@@ -19,6 +20,8 @@ protected:
     catalog_manager catalogManager;
 
     static RecordManager rec_manager;
+
+    table joinTable(std::vector<table> &tables);
 
 public:
     static Error create_table(std::string &table_name, attributes_set &attrs, Index &index, int pk);

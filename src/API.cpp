@@ -23,13 +23,17 @@ Error API::drop_table(std::string &table_name) {
 Error API::create_index(std::string &index_name, std::string &table_name, std::string &column_name) {
     auto res1 = catalog_manager::createindex(table_name, column_name, index_name);
     auto res2 = successful;
+//    auto res3 = rec_manager.createIndex();
 
     if (res1 == successful and res2 == successful)
         return successful;
 }
 
 Error API::drop_index(std::string &index_name) {
-    return invalid_value;
+//    IndexManager idx_manager;
+//    auto table_name =
+//    auto res2 = catalogManager.dropindex();
+    return successful;
 }
 
 Error API::insert_table(std::string &table_name, std::vector<std::string> values) {
@@ -59,7 +63,7 @@ Error API::select(std::string &table_name, std::vector<std::string> conditions) 
 
 int API::check_type(std::string &val) {
     if (val[0] == '\'' and val[val.size() - 1] == '\'')
-        return val.size() - 2;
+        return static_cast<int>(val.size()) - 2;
     else {
         if (num2str(str2num<int>(val)) == val)
             return -1;

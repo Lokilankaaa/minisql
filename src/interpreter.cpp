@@ -23,7 +23,7 @@ void Interpreter::get_script() {
     std::string tmp;
     script.clear();
     do {
-        std::cout << ">>> ";
+        std::cout << "minisql > ";
         getline(std::cin, tmp);
         script += tmp + " ";
     } while (tmp[tmp.size() - 1] != ';');
@@ -97,24 +97,24 @@ void Interpreter::execute() {
     }
 
     catch (const e_syntax_error &e) {
-        std::cout << ">>> ERROR! Unrecognized syntax!" << std::endl;
+        std::cout << "minisql > ERROR! Unrecognized syntax!" << std::endl;
     }
 
     catch (const e_exit_command &e) {
-        std::cout << ">>> Bye!" << std::endl;
+        std::cout << "minisql > Bye!" << std::endl;
         exit(0);
     }
 
     catch (const e_unknown_file_path &e) {
-        std::cout << ">>> Unknown file path!" << std::endl;
+        std::cout << "minisql > Unknown file path!" << std::endl;
     }
 
     catch (const e_table_exist &e) {
-        std::cout << ">>> table exists!" << std::endl;
+        std::cout << "minisql > table exists!" << std::endl;
     }
 
     catch (const e_table_not_exist &e) {
-        std::cout << ">>> table doesn't exist!" << std::endl;
+        std::cout << "minisql > table doesn't exist!" << std::endl;
     }
 }
 
@@ -245,8 +245,24 @@ void Interpreter::exec_insert_table(std::string &sql) {
 void Interpreter::exec_select(std::string &sql) {
     std::map<std::string, std::vector<std::string> > clause_content;
     auto res = check_select(sql, clause_content);
-    if (res == successful) { ;
+    if (res == successful) {
+        auto cols = clause_content["attr"];
+        auto tables = clause_content["from"];
+        auto conds = clause_content["where"];
+        if (cols.size() == 1 and cols[0] == "*") {
+            for (int i = 0; i < tables.size(); ++i) {
+
+            }
+        } else if (!cols.empty()) {
+
+        } else {
+
+        }
     } else {
         throw e_syntax_error();
     }
+}
+
+table API::joinTable (std::vector<table> &tables) {
+
 }
