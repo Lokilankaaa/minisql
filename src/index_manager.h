@@ -1,44 +1,59 @@
+//
+// Created by è–›ä¼Ÿ on 2020/5/30.
+//
+
+#ifndef MINISQL_INDEX_MANAGER_H
+#define MINISQL_INDEX_MANAGER_H
+
+
 #pragma once
 #include <sstream>
 #include <string>
 #include <map>
 #include "meta.h"
 #include "buffer_manager.h"
-//#include "bplustree.h"
+#include "buffer_manager_page.h"
+#include "bplustree.h"
 
 using namespace std;
 class IndexManager {
 public:
-	IndexManager(string table_name);
-	~IndexManager();
-	//´´½¨Ë÷ÒıÎÄ¼ş¼°B + Ê÷
-	void CreateIndex(string file_path, int keytype);
-	//É¾³ıË÷Òı¡¢B+Ê÷¼°ÎÄ¼ş
-	void DropIndex(string file_path, int keytype);
-	//Ñ°ÕÒË÷ÒıÎ»ÖÃ
-	int FindIndex(string file_path, data Data);
-	//ÔÚÖ¸¶¨Ë÷ÒıÖĞ²åÈëÒ»¸ökey
-	void InsertIndex(string file_path, data Data, int block_id);
-	//ÔÚÖ¸¶¨Ë÷ÒıÖĞÉ¾³ıÏàÓ¦µÄKey
-	void DeleteIndexByKey(string file_path, data Data);
-	//·µ»ØÒ»¶¨·¶Î§ÄÚµÄvalue
-	void SearchRange(string file_path, data Data1, data Data2, vector<int>& vals);
+    explicit IndexManager(string table_name);
+    ~IndexManager();
+    //åˆ›å»ºç´¢å¼•æ–‡ä»¶åŠB + æ ‘
+    void CreateIndex(const string& file_path, int keytype);
+    //åˆ é™¤ç´¢å¼•ã€B+æ ‘åŠæ–‡ä»¶
+    void DropIndex(const string& file_path, int keytype);
+    //å¯»æ‰¾ç´¢å¼•ä½ç½®
+    int FindIndex(const string& file_path, data Data);
+    //åœ¨æŒ‡å®šç´¢å¼•ä¸­æ’å…¥ä¸€ä¸ªkey
+    void InsertIndex(string file_path, data Data, int block_id);
+    //åœ¨æŒ‡å®šç´¢å¼•ä¸­åˆ é™¤ç›¸åº”çš„Key
+    void DeleteIndexByKey(const string& file_path, data Data);
+    //è¿”å›ä¸€å®šèŒƒå›´å†…çš„value
+    void SearchRange(const string& file_path, data Data1, data Data2, vector<int>& vals);
+    //è¾“å…¥indexè¿”å›å¯¹åº”è¡¨çš„åç§°
+    //è¿”å›çš„æ˜¯æ–‡ä»¶åï¼Œè¡¨ååœ¨æ–‡ä»¶åä¸­
+    string FindTableName(const data& index);
 
 private:
-//	typedef map<string, BPlusTree<int>*> int_Map;
-//	typedef map<string, BPlusTree<float>*> float_Map;
-//	typedef map<string, BPlusTree<string>*> string_Map;
+    typedef map<string, BPlusTree<int>*> int_Map;
+    typedef map<string, BPlusTree<float>*> float_Map;
+    typedef map<string, BPlusTree<string>*> string_Map;
 
-	int static const TYPE_INT = -1;
-	int static const TYPE_FLOAT = 0;
+    int_Map IntMap_Index;
+    float_Map FloatMap_Index;
+    string_Map StringMap_Index;
 
-//	int_Map IntMap_Index;
-//	float_Map FloatMap_Index;
-//	string_Map StringMap_Index;
+    int static const TYPE_INT = -1;
+    int static const TYPE_FLOAT = 0;
 
-	//¼ÆËãB+Ê÷ÊÊºÏµÄdegree
-	int GetDegree(int type);
-	//¼ÆËã²»Í¬ÀàĞÍKeyµÄsize
-	int GetKeySize(int type);
+    //è®¡ç®—B+æ ‘é€‚åˆçš„degree
+    int GetDegree(int type);
+    //è®¡ç®—ä¸åŒç±»å‹Keyçš„size
+    int GetKeySize(int type);
 
 };
+
+
+#endif //MINISQL_INDEX_MANAGER_H
