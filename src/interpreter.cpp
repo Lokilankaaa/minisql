@@ -11,7 +11,7 @@
 #include "error.h"
 #include <vector>
 
-std::string Interpreter::toLower(string str) {
+std::string Interpreter::toLower(std::string str) {
     for (auto i = str.begin(); i < str.end(); ++i) {
         if (*i >= 'A' and *i <= 'Z')
             *i += 32;
@@ -21,8 +21,9 @@ std::string Interpreter::toLower(string str) {
 
 void Interpreter::get_script() {
     std::string tmp;
+    script.clear();
     do {
-        std::cout << ">>> ";
+        std::cout << "minisql > ";
         getline(std::cin, tmp);
         script += tmp + " ";
     } while (tmp[tmp.size() - 1] != ';');
@@ -96,35 +97,35 @@ void Interpreter::execute() {
     }
 
     catch (const e_syntax_error &e) {
-        std::cout << ">>> ERROR! Unrecognized syntax!" << std::endl;
+        std::cout << "minisql > ERROR! Unrecognized syntax!" << std::endl;
     }
 
     catch (const e_exit_command &e) {
-        std::cout << ">>> Bye!" << std::endl;
+        std::cout << "minisql > Bye!" << std::endl;
         exit(0);
     }
 
     catch (const e_unknown_file_path &e) {
-        std::cout << ">>> Unknown file path!" << std::endl;
+        std::cout << "minisql > Unknown file path!" << std::endl;
     }
 
     catch (const e_table_exist &e) {
-        std::cout << ">>> table exists!" << std::endl;
+        std::cout << "minisql > table exists!" << std::endl;
     }
 
     catch (const e_table_not_exist &e) {
-        std::cout << ">>> table doesn't exist!" << std::endl;
+        std::cout << "minisql > table doesn't exist!" << std::endl;
     }
 }
 
-void Interpreter::exec_create_table(string &sql) {
-    map<std::string, std::string> name_attr;
+void Interpreter::exec_create_table(std::string &sql) {
+    std::map<std::string, std::string> name_attr;
     std::string table_name;
     attributes_set attrs;
     int pk, cnt = 0;
     auto res = check_create_table(sql, table_name, name_attr);
     if (res == successful) {
-        map<std::string, int> tmp_at;
+        std::map<std::string, int> tmp_at;
         for (auto &i:name_attr) {
             if (i.first != table_name) {
                 tmp_at[i.first] = cnt;
@@ -148,33 +149,36 @@ void Interpreter::exec_create_table(string &sql) {
             }
         }
         pk = tmp_at[table_name];
-        if (api.create_table(table_name, attrs, pk) != successful)
+        Index i;
+        if (API::create_table(table_name, attrs, i, pk) != successful)
             throw e_table_exist();
         else {
-            std::cout << "Success!" << endl;
+            std::cout << "Success!" << std::endl;
         }
     } else {
         throw e_syntax_error();
     }
 }
 
-void Interpreter::exec_drop_table(string &sql) {
+void Interpreter::exec_drop_table(std::string &sql) {
     std::string dropped_table;
     auto res = check_drop_table(sql, dropped_table);
     if (res == successful) {
-        if (api.drop_table(dropped_table) != successful)
+        if (API::drop_table(dropped_table) != successful)
             throw e_table_not_exist();
+        else
+            std::cout << "Success!" << std::endl;
     } else {
         throw e_syntax_error();
     }
 }
 
-void Interpreter::execfile(string &sql) {
+void Interpreter::execfile(std::string &sql) {
     auto split_res = split(sql, ' ');
     if (split_res.size() > 2)
         throw e_syntax_error();
     else {
-        fstream sql_file(split_res[1]);
+        std::fstream sql_file(split_res[1]);
         if (sql_file.fail())
             throw e_unknown_file_path();
         else {
@@ -195,17 +199,19 @@ void Interpreter::exec_quit() {
     throw e_exit_command();
 }
 
-void Interpreter::exec_create_index(string &sql) {
+void Interpreter::exec_create_index(std::string &sql) {
     std::string table_name, attr, idx_name;
     auto res = check_create_index(sql, table_name, attr, idx_name);
-    if (res == successful) { ;
+    if (res == successful) {
+        if (API::create_index(idx_name, table_name, attr) == successful)
+            std::cout << "Success!" << std::endl;
     } else {
         throw e_syntax_error();
     }
 }
 
 
-void Interpreter::exec_drop_index(string &sql) {
+void Interpreter::exec_drop_index(std::string &sql) {
     std::string dropped_idx;
     auto res = check_drop_index(sql, dropped_idx);
     if (res == successful) { ;
@@ -214,7 +220,7 @@ void Interpreter::exec_drop_index(string &sql) {
     }
 }
 
-void Interpreter::exec_delete_table(string &sql) {
+void Interpreter::exec_delete_table(std::string &sql) {
     std::string table_name;
     std::vector<std::string> conds;
     auto res = check_delete_table(sql, table_name, conds);
@@ -224,22 +230,39 @@ void Interpreter::exec_delete_table(string &sql) {
     }
 }
 
-void Interpreter::exec_insert_table(string &sql) {
+void Interpreter::exec_insert_table(std::string &sql) {
     std::vector<std::string> vals;
     std::string table_name;
     auto res = check_insert_table(sql, table_name, vals);
-    if (res == successful) { ;
+    if (res == successful) {
+        if(api.insert_table(table_name, vals) == successful)
+            std::cout << "Success!" << std::endl;
     } else {
         throw e_syntax_error();
     }
 }
 
-void Interpreter::exec_select(string &sql) {
+void Interpreter::exec_select(std::string &sql) {
     std::map<std::string, std::vector<std::string> > clause_content;
     auto res = check_select(sql, clause_content);
-    if (res == successful) { ;
+    if (res == successful) {
+        auto cols = clause_content["attr"];
+        auto tables = clause_content["from"];
+        auto conds = clause_content["where"];
+        if (cols.size() == 1 and cols[0] == "*") {
+            for (int i = 0; i < tables.size(); ++i) {
+
+            }
+        } else if (!cols.empty()) {
+
+        } else {
+
+        }
     } else {
         throw e_syntax_error();
     }
 }
 
+table API::joinTable (std::vector<table> &tables) {
+
+}

@@ -25,7 +25,32 @@ void writeInto(char *p, int &offset, T oneData){
 
 //用于比较传入的两个数据是否满足条件
 template<typename T>
-bool satisfyWithCondition(T first, T second, Constraint rel);
+bool satisfyWithCondition(T first, T second, Constraint rel){
+    if(rel.conSymbol==LESS){
+        if(first < second) return true;
+        else return false;
+    }
+    else if(rel.conSymbol==LESS_OR_EQUAL){
+        if(first <= second) return true;
+        else return false;
+    }
+    else if(rel.conSymbol==EQUAL){
+        if(first == second) return true;
+        else return false;
+    }
+    else if(rel.conSymbol==MORE_OR_EQUAL){
+        if(first >= second) return true;
+        else return false;
+    }
+    else if(rel.conSymbol==MORE){
+        if(first > second) return true;
+        else return false;
+    }
+    else if(rel.conSymbol==NOT_EQUAL){
+        if(first != second) return true;
+        else return false;
+    }
+}
 
 
 //用于获取不同类型数据的长度

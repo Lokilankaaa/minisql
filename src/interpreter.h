@@ -13,7 +13,7 @@
 
 class Interpreter : public Grammar {
 private:
-    string script;
+    std::string script;
 
     API api;
 
@@ -30,23 +30,23 @@ public:
 
     void execute();
 
-    void exec_select(string &sql);
+    void exec_select(std::string &sql);
 
-    void exec_create_table(string &sql);
+    static void exec_create_table(std::string &sql);
 
-    void exec_create_index(string &sql);
+    static void exec_create_index(std::string &sql);
 
-    void exec_drop_table(string &sql);
+    static void exec_drop_table(std::string &sql);
 
-    void exec_drop_index(string &sql);
+    void exec_drop_index(std::string &sql);
 
-    void exec_delete_table(string &sql);
+    void exec_delete_table(std::string &sql);
 
-    void exec_insert_table(string &sql);
+    void exec_insert_table(std::string &sql);
 
-    void exec_quit();
+    static void exec_quit();
 
-    void execfile(string &sql);
+    void execfile(std::string &sql);
 
 };
 

@@ -6,8 +6,6 @@
 #define MINISQL_BUFFER_RECORD_RECORD_MANAGER_H
 
 
-
-
 //RecordManager类: 为API提供接口，直接对记录、文件进行操作
 /* 接口说明：
  * createTableFile(表名) 可以创建一张表
@@ -21,9 +19,6 @@
  *
  * 详细信息见下面个函数说明
  */
-
-
-
 
 
 #include <iostream>
@@ -41,6 +36,7 @@
 
 #define POSINF INT_MAX              //用于where语句的上下限
 #define NEGINF INT_MIN
+#define DATA_FILE_PATH "./database/data/"
 
 extern BufferManager buf_manager;
 
@@ -100,11 +96,11 @@ private:
     //在相应的块中查询满足条件的记录,结果保存在要输出的表的vector<Tuple>&中
     void searchRecordAccordCons(std::string table_name, int block_id, attributes_set target_attr, int attr_index, Constraint target_cons, std::vector<TUPLE> &result);
     //判断要插入的记录是否和其他记录有冲突
-    bool judgeConflict(std::vector<TUPLE>& table_tuples, std::vector<data> &target_value, int attr_index);
+    bool judgeConflict(const std::vector<TUPLE>& table_tuples, std::vector<data> &target_value, int attr_index);
     //insertRecord调用的函数，表示在该位置插入一条记录
     void insertOneRecord(char *p, int offset, int len, const std::vector<data> &record_values);
     //根据条件删除记录
-    void deleteRecordAccordCons(std::string table_name, int block_id, attributes_set target_attr, int attr_index, Constraint target_cons);
+    int deleteRecordAccordCons(std::string table_name, int block_id, attributes_set target_attr, int attr_index, Constraint target_cons);
     //deleteRecord—>deleteRecordAccordCons—>调用的函数，真正地删除一个数据
     char* deleteOneRecord(char *p);
 };

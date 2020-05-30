@@ -17,7 +17,8 @@ enum Error {
     insert_table_exist,
     table_not_exist,
     table_exist,
-    tuple_not_exist
+    tuple_not_exist,
+    attr_not_exist
 };
 
 class e_syntax_error : public std::exception {
@@ -72,5 +73,6 @@ class e_unique_conflict : public std::exception {
 class e_primary_key_conflict : public std::exception{
 
 };
+
 
 #endif //MINISQL_ERROR_H

@@ -6,11 +6,14 @@
 
 #include <utility>
 
-TUPLE::TUPLE() = default;
+TUPLE::TUPLE(){
+    state = false;
+}
 
 TUPLE::~TUPLE() = default;
 
 TUPLE::TUPLE(const TUPLE &t) {
+    state = false;
     Data = t.Data;
 }
 

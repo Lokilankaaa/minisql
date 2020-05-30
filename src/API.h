@@ -8,19 +8,27 @@
 #include <string>
 #include "error.h"
 #include "Catalog_manager.h"
+#include "record_manager.h"
+#include "index_manager.h"
 
 
 class API {
+private:
+    static int check_type (std::string& val);
+
 protected:
     catalog_manager catalogManager;
 
+    static RecordManager rec_manager;
+
+    table joinTable(std::vector<table> &tables);
 
 public:
-    Error create_table(string &table_name, attributes_set &attrs, int pk);
+    static Error create_table(std::string &table_name, attributes_set &attrs, Index &index, int pk);
 
-    Error create_index(std::string &index_name, std::string &table_name, std::string &column_name);
+    static Error create_index(std::string &index_name, std::string &table_name, std::string &column_name);
 
-    Error drop_table(std::string &table_name);
+    static Error drop_table(std::string &table_name);
 
     Error drop_index(std::string &index_name);
 

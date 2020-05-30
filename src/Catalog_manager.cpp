@@ -7,7 +7,7 @@
 #include "Grammar.h"
 
 
-Error catalog_manager::createtable(string &table_name, attributes_set &attrs, int pk) {
+Error catalog_manager::createtable(std::string &table_name, attributes_set &attrs, Index &index, int pk) {
     if (hastable(table_name) != -1) {
         return table_exist;
     } else {
@@ -25,7 +25,10 @@ Error catalog_manager::createtable(string &table_name, attributes_set &attrs, in
         //pk
         meta_data += num2str(pk) + " ";
         //index num
-        meta_data += "0 ";
+        meta_data += num2str(index.num) + " ";
+        for (int j = 0; j < index.num; ++j) {
+            meta_data += num2str(index.location[j]) + " " + index.name[j] + " ";
+        }
         meta_data += "\n#";
         meta_data = num2str(meta_data.size() - 1) + meta_data;
 
@@ -55,7 +58,7 @@ Error catalog_manager::createtable(string &table_name, attributes_set &attrs, in
     return successful;
 }
 
-int catalog_manager::hastable(string &table_name) {
+int catalog_manager::hastable(std::string &table_name) {
     int block_num = getBlockNum(CATALOG_FILE_PATH);
     if (!block_num)
         block_num = 1;
@@ -74,7 +77,7 @@ int catalog_manager::hastable(string &table_name) {
     return -1;
 }
 
-Error catalog_manager::droptable(string &table_name) {
+Error catalog_manager::droptable(std::string &table_name) {
     auto block_num = hastable(table_name);
     if (block_num == -1) {
         return table_not_exist;
@@ -103,7 +106,7 @@ Error catalog_manager::droptable(string &table_name) {
     return successful;
 }
 
-int catalog_manager::getBlockNum(const string &file_name) {
+int catalog_manager::getBlockNum(const std::string &file_name) {
     char *p;
     int num = -1;
     do {
@@ -112,6 +115,108 @@ int catalog_manager::getBlockNum(const string &file_name) {
     return num;
 }
 
-Error catalog_manager::createindex(string &table_name, string &attr_name, string &index_name) {
-    return table_exist;
+attributes_set catalog_manager::getAllattrs(std::string &table_name) {
+    auto block_num = hastable(table_name);
+    auto buffer = buf_manager.getPage(CATALOG_FILE_PATH, block_num);
+    std::string buf_cp(buffer);
+    auto split_res = split(buf_cp, '\n');
+    attributes_set attrs;
+    int cnt = 0;
+    for (auto &i:split_res) {
+        auto tmp_res = split(i, ' ');
+        if (tmp_res[1] == table_name) {
+            int j = 3;
+            for (; j < 3 + 3 * str2num<int>(tmp_res[2]); j += 3) {
+                attrs.name[cnt] = tmp_res[j];
+                attrs.type[cnt] = str2num<int>(tmp_res[j + 1]);
+                attrs.unique[cnt] = str2num<int>(tmp_res[j + 2]);
+                cnt++;
+            }
+            attrs.num = cnt;
+            attrs.primary_key = str2num<int>(tmp_res[j]);
+            break;
+        }
+    }
+    return attrs;
+}
+
+bool catalog_manager::hasattribute(std::string &table_name, std::string &attr_name) {
+    auto attrs = getAllattrs(table_name);
+    for (int i = 0; i < attrs.num; ++i) {
+        if (attr_name == attrs.name[i])
+            return true;
+    }
+    return false;
+}
+
+Index catalog_manager::getAllindex(std::string &table_name) {
+    auto block_num = hastable(table_name);
+    auto buffer = buf_manager.getPage(CATALOG_FILE_PATH, block_num);
+    std::string buf_cp(buffer);
+    auto split_res = split(buf_cp, '\n');
+    Index index;
+    int cnt = 0;
+    for (auto &i:split_res) {
+        auto tmp_res = split(i, ' ');
+        if (tmp_res[1] == table_name) {
+            int offset = str2num<int>(tmp_res[2]);
+            int pos = 2 + 3 * offset + 1;
+            int tt = str2num<int>(tmp_res[pos]);
+            if (tt == 0)
+                break;
+            for (int j = pos + 1; j < pos + 1 + 2 * tt; j += 2) {
+                index.name[cnt] = tmp_res[j];
+                index.location[cnt] = str2num<int>(tmp_res[j + 1]);
+                cnt++;
+            }
+            index.num = cnt;
+            break;
+        }
+    }
+    return index;
+}
+
+Error catalog_manager::createindex(std::string &table_name, std::string &attr_name, std::string &index_name) {
+    if (hastable(table_name) == -1)
+        throw e_table_not_exist();
+    if (!hasattribute(table_name, attr_name))
+        throw e_attribute_not_exist();
+    auto index = getAllindex(table_name);
+    if (index.num == 10)
+        throw e_index_full();
+
+    auto attrs = getAllattrs(table_name);
+    for (int i = 0; i < index.num; ++i) {
+        if (index.name[i] == index_name)
+            throw e_index_exist();
+        if (attrs.name[index.location[i]] == attr_name)
+            throw e_index_exist();
+    }
+    index.name[index.num] = index_name;
+    for (int j = 0; j < attrs.num; ++j) {
+        if (attrs.name[j] == attr_name) {
+            index.location[index.num] = j;
+            index.num++;
+            break;
+        }
+    }
+    droptable(table_name);
+    createtable(table_name, attrs, index, attrs.primary_key);
+    return successful;
+}
+
+Error catalog_manager::dropindex(std::string &table_name, std::string &index_name) {
+    auto n_index = getAllindex(table_name);
+    for (int i = 0; i < n_index.num; ++i) {
+        if (n_index.name[i] == index_name) {
+            n_index.name[i] = n_index.name[n_index.num-1];
+            n_index.location[i] = n_index.location[n_index.num-1];
+            n_index.num--;
+            auto attrs = getAllattrs(table_name);
+            droptable(table_name);
+            createtable(table_name, attrs, n_index, attrs.primary_key);
+            return successful;
+        }
+    }
+    return successful;
 }
