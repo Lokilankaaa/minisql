@@ -8,7 +8,7 @@
 #include <sstream>
 #include <algorithm>
 #include "buffer_manager.h"
-#include "buffer_manager_page.h"
+
 
 extern BufferManager buffer_manager;
 
@@ -1057,8 +1057,6 @@ void BPlusTree<T>::PrintLeaf()
         p->PrintList();
         p = p->nextLeaf();
     }
-
-    return;
 }
 
 template <class T>
