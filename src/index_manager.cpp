@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cstring>
 
 #ifdef __APPLE__
 
@@ -14,8 +15,6 @@
 #else
 #include <sys/io.h>
 #endif
-
-#include <cstring>
 
 using namespace std;
 
@@ -29,19 +28,19 @@ IndexManager::IndexManager(string table_name) {
 }
 
 IndexManager::~IndexManager() {
-    for (auto & itInt : IntMap_Index) {
+    for (auto &itInt : IntMap_Index) {
         if (itInt.second) {
             itInt.second->WrittenBackToDiskAll();
             delete itInt.second;
         }
     }
-    for (auto & itString : StringMap_Index) {
+    for (auto &itString : StringMap_Index) {
         if (itString.second) {
             itString.second->WrittenBackToDiskAll();
             delete itString.second;
         }
     }
-    for (auto & itFloat : FloatMap_Index) {
+    for (auto &itFloat : FloatMap_Index) {
         if (itFloat.second) {
             itFloat.second->WrittenBackToDiskAll();
             delete itFloat.second;
@@ -71,7 +70,7 @@ int IndexManager::GetKeySize(int type) {
 
 
 //创建索引文件及B + 树
-void IndexManager::CreateIndex(const string& file_path, int keytype) {
+void IndexManager::CreateIndex(const string &file_path, int keytype) {
     int key_size = GetKeySize(keytype); //获取key的size
     int degree = GetDegree(keytype); //获取需要的degree
 
@@ -90,7 +89,7 @@ void IndexManager::CreateIndex(const string& file_path, int keytype) {
 }
 
 //删除索引、B+树及文件
-void IndexManager::DropIndex(const string& file_path, int keytype) {
+void IndexManager::DropIndex(const string &file_path, int keytype) {
     //根据不同数据类型采用对应的处理方式
     if (keytype == TYPE_INT) {
         //查找路径对应的键值对
@@ -126,7 +125,7 @@ void IndexManager::DropIndex(const string& file_path, int keytype) {
 }
 
 //寻找索引位置
-int IndexManager::FindIndex(const string& file_path, data Data) {
+int IndexManager::FindIndex(const string &file_path, data Data) {
     //setKey(type, key);
 
     if (Data.type == TYPE_INT) {
@@ -183,7 +182,7 @@ void IndexManager::InsertIndex(string file_path, data Data, int block_id) {
 }
 
 //在指定索引中删除相应的Key
-void IndexManager::DeleteIndexByKey(const string& file_path, data Data) {
+void IndexManager::DeleteIndexByKey(const string &file_path, data Data) {
     //setKey(type, key);
 
     if (Data.type == TYPE_INT) {
@@ -211,7 +210,7 @@ void IndexManager::DeleteIndexByKey(const string& file_path, data Data) {
 }
 
 //返回一定范围内的value
-void IndexManager::SearchRange(const string& file_path, data Data1, data Data2, vector<int> &vals) {
+void IndexManager::SearchRange(const string &file_path, data Data1, data Data2, vector<int> &vals) {
     int flag = 0;
     //检测数据类型是否匹配
     if (Data1.type == -2)
@@ -247,7 +246,7 @@ void IndexManager::SearchRange(const string& file_path, data Data1, data Data2, 
     }
 }
 
-string IndexManager::FindTableName(const data& index) {
+string IndexManager::FindTableName(const data &index) {
     string filepath = "xxxxx\\*.txt";
     string filename;
     _finddata_t fileinfo;

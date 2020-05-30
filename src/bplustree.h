@@ -1,6 +1,6 @@
 #ifndef MINISQL_BPLUSTREE_H
 #define MINISQL_BPLUSTREE_H
-#pragma once
+
 #include <vector>
 #include <string>
 #include <map>
