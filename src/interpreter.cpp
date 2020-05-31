@@ -11,6 +11,7 @@
 #include "error.h"
 #include <vector>
 
+
 std::string Interpreter::toLower(std::string str) {
     for (auto i = str.begin(); i < str.end(); ++i) {
         if (*i >= 'A' and *i <= 'Z')
@@ -106,15 +107,15 @@ void Interpreter::execute() {
     }
 
     catch (const e_unknown_file_path &e) {
-        std::cout << "minisql > Unknown file path!" << std::endl;
+        std::cout << "minisql > ERROR! Unknown file path!" << std::endl;
     }
 
     catch (const e_table_exist &e) {
-        std::cout << "minisql > table exists!" << std::endl;
+        std::cout << "minisql > ERROR! table exists!" << std::endl;
     }
 
     catch (const e_table_not_exist &e) {
-        std::cout << "minisql > table doesn't exist!" << std::endl;
+        std::cout << "minisql > ERROR! table doesn't exist!" << std::endl;
     }
 }
 
@@ -153,7 +154,7 @@ void Interpreter::exec_create_table(std::string &sql) {
         if (API::create_table(table_name, attrs, i, pk) != successful)
             throw e_table_exist();
         else {
-            std::cout << "Success!" << std::endl;
+            std::cout << "minisql > Success!" << std::endl;
         }
     } else {
         throw e_syntax_error();
@@ -167,7 +168,7 @@ void Interpreter::exec_drop_table(std::string &sql) {
         if (API::drop_table(dropped_table) != successful)
             throw e_table_not_exist();
         else
-            std::cout << "Success!" << std::endl;
+            std::cout << "minisql > Success!" << std::endl;
     } else {
         throw e_syntax_error();
     }
@@ -204,12 +205,11 @@ void Interpreter::exec_create_index(std::string &sql) {
     auto res = check_create_index(sql, table_name, attr, idx_name);
     if (res == successful) {
         if (API::create_index(idx_name, table_name, attr) == successful)
-            std::cout << "Success!" << std::endl;
+            std::cout << "minisql > Success!" << std::endl;
     } else {
         throw e_syntax_error();
     }
 }
-
 
 void Interpreter::exec_drop_index(std::string &sql) {
     std::string dropped_idx;
@@ -236,7 +236,7 @@ void Interpreter::exec_insert_table(std::string &sql) {
     auto res = check_insert_table(sql, table_name, vals);
     if (res == successful) {
         if(api.insert_table(table_name, vals) == successful)
-            std::cout << "Success!" << std::endl;
+            std::cout << "minisql > Success!" << std::endl;
     } else {
         throw e_syntax_error();
     }
