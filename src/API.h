@@ -18,7 +18,7 @@ private:
 
     static CONSTRAINT check_cons(std::string &str);
 
-    static void find_del(data &d, std::vector<data> &vd);
+//    static void find_del(data &d, std::vector<data> &vd);
 
     static bool find_in (data &d, std::vector<data> &vd);
 

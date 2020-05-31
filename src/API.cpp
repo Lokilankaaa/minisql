@@ -166,7 +166,8 @@ table API::select(std::vector<std::string> &attrs, std::vector<std::string> &tab
                     tmp_data.char_data = res[2];
                 }
                 tmp_con.conData = tmp_data, tmp_con.conSymbol = check_cons(res[1]);
-                ts.push_back(rec_manager.selectRecord(tables[0], res[0], tmp_con));
+                auto t = rec_manager.selectRecord(tables[0], res[0], tmp_con);
+                ts.push_back(t);
             }
             return joinTable(ts);
         }
@@ -175,14 +176,14 @@ table API::select(std::vector<std::string> &attrs, std::vector<std::string> &tab
     }
 }
 
-void API::find_del(data &d, std::vector<data> &vd) {
-    std::vector<data> n_vd;
-    for (auto &i : vd) {
-        if (d == i)
-            n_vd.push_back(i);
-    }
-    vd = n_vd;
-}
+//void API::find_del(data &d, std::vector<data> &vd) {
+//    std::vector<data> n_vd;
+//    for (auto &i : vd) {
+//        if (d == i)
+//            n_vd.push_back(i);
+//    }
+//    vd = n_vd;
+//}
 
 bool API::find_in(data &d, std::vector<data> &vd) {
     for (auto &i:vd) {
@@ -196,16 +197,20 @@ table API::joinTable(vector<table> &tables) {
     auto attrs = tables[0].getAttr();
     table n_table("tmp", attrs);
     int pk = attrs.primary_key;
-    vector<data> remain_list(10);
+    vector<data> remain_list;
     auto tmp = tables[0].getTuple();
     for (auto &i : tmp) {
         remain_list.push_back(i.getData()[pk]);
     }
     for (auto &t : tables) {
         auto t_tuples = t.getTuple();
+        vector<data> tmp_;
         for (auto &i:t_tuples) {
-            find_del(i.getData()[pk], remain_list);
+            if(find_in(i.getData()[pk], remain_list)){
+                tmp_.push_back(i.getData()[pk]);
+            }
         }
+        remain_list = tmp_;
     }
     for (auto &i:tmp) {
         if (find_in(i.getData()[pk], remain_list))

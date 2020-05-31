@@ -4,7 +4,6 @@
 
 #include "interpreter.h"
 
-#include <utility>
 #include <sstream>
 #include <string>
 #include <iostream>
@@ -307,10 +306,26 @@ void Interpreter::exec_select(std::string &sql) {
                     }
                     std::cout << "|" << std::endl;
                 }
-            } else if (clause_content["attr"].size() >= 1) {
-
+            } else if (!clause_content["attr"].empty()) {
+                for (int i = 0; i < clause_content["attr"].size(); ++i) {
+                    std::cout << "| " << clause_content["attr"][i] << " ";
+                }
+                std::cout << "|" << std::endl;
+                auto loca_res = exibit_location(clause_content["from"][0], clause_content["attr"]);
+                for (int j = 0; j < table.getTupleSize(); ++j) {
+                    for (int loca_re : loca_res) {
+                        auto type = table.getTuple()[j].getData()[loca_re].type;
+                        if (type == -1)
+                            std::cout << "| " << table.getTuple()[j].getData()[loca_re].int_data << " ";
+                        else if (!type)
+                            std::cout << "| " << table.getTuple()[j].getData()[loca_re].float_data << " ";
+                        else
+                            std::cout << "| " << table.getTuple()[j].getData()[loca_re].char_data << " ";
+                    }
+                    std::cout << "|" << std::endl;
+                }
             } else {
-
+                throw e_syntax_error();
             }
         } else {
             std::cout << "minisql > Result is empty!" << std::endl;
@@ -339,4 +354,17 @@ void Interpreter::change_order(attributes_set &attrs, vector<std::string> &order
         }
     }
     attrs = n_attrs;
+}
+
+std::vector<int> Interpreter::exibit_location(std::string &table_name, std::vector<std::string> &attr) {
+    auto allattrs = catalog_manager::getAllattrs(table_name);
+    vector<int> locations;
+    for (auto &i:attr) {
+        for (int j = 0; j < allattrs.num; j++) {
+            if (i == allattrs.name[j]) {
+                locations.push_back(j);
+            }
+        }
+    }
+    return locations;
 }
