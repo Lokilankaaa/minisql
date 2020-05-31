@@ -31,11 +31,13 @@ struct attributes_set {
     int type[32]; // type of each attribute
     bool unique[32]{false}; // whether it's unique
     int primary_key; // -1 means no primary key, other means the position of key
+    bool hasIndex[32]{false};   //lfy add: judge whether has index
 };
 
 class TUPLE {
 private:
     std::vector<data> Data;
+    bool state;                 //lfy add: the state for the TUPLE(using in record_manager)
 public:
     TUPLE();
 
@@ -48,6 +50,10 @@ public:
     std::vector<data> getData() const;
 
     int getTupleSize() const;
+
+    //lfy add: using for record_manager
+    void setState() {state= true;};
+    bool getState() const {return state;};
 };
 
 class table {

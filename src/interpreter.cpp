@@ -11,7 +11,6 @@
 #include "error.h"
 #include <vector>
 
-
 std::string Interpreter::toLower(std::string str) {
     for (auto i = str.begin(); i < str.end(); ++i) {
         if (*i >= 'A' and *i <= 'Z')
@@ -111,11 +110,11 @@ void Interpreter::execute() {
     }
 
     catch (const e_table_exist &e) {
-        std::cout << "minisql > ERROR! table exists!" << std::endl;
+        std::cout << "minisql > table exists!" << std::endl;
     }
 
     catch (const e_table_not_exist &e) {
-        std::cout << "minisql > ERROR! table doesn't exist!" << std::endl;
+        std::cout << "minisql > table doesn't exist!" << std::endl;
     }
 }
 
