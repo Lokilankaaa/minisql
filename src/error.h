@@ -69,6 +69,10 @@ class e_unique_conflict : public std::exception {
 
 };
 
+class e_index_define_error : public std::exception {
+
+};
+
 //lfy: add e_primary_key_conflict to represent primary key conflict
 class e_primary_key_conflict : public std::exception{
 

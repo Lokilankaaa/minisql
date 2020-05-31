@@ -28,7 +28,7 @@ public:
     void SearchRange(const string& file_path, data Data1, data Data2, vector<int>& vals);
     //输入index返回对应表的名称
     //返回的是文件名，表名在文件名中
-    string FindTableName(const data& index);
+    static string FindTableName(std::string& index_name);
 
 private:
     typedef map<string, BPlusTree<int>*> int_Map;
@@ -39,8 +39,8 @@ private:
     float_Map FloatMap_Index;
     string_Map StringMap_Index;
 
-    int static const TYPE_INT = -1;
-    int static const TYPE_FLOAT = 0;
+//    int static const TYPE_INT = -1;
+//    int static const TYPE_FLOAT = 0;
 
     //计算B+树适合的degree
     int GetDegree(int type);

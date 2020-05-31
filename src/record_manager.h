@@ -14,7 +14,7 @@
  * selectRecord(表名,目标属性,条件,返回变量table的table_name) 可以获取满足条件的记录组成的table变量
  * insertRecord(表名,TUPLE记录) 向该表插入一条记录
  * deleteRecord(表名) 删除整张表的记录，但是这张表依旧保留
- * deleteRecord(表名,目标属性,条件) 可以删除含有满足条件属性的记录
+ * deleteRecord(表名,属性集合,约束集合) 可以删除含有满足条件属性的所有记录
  * createIndex(index管理类对象, 表名, 对应属性) 可以在对应表的对应属性上创建索引
  *
  * 详细信息见下面个函数说明
@@ -27,6 +27,7 @@
 #include <sstream>
 #include <climits>
 #include <cstdio>
+#include <set>
 #include "meta.h"
 #include "index_manager.h"          //索引管理，根据整合后实际情况引用
 #include "Catalog_manager.h"
@@ -73,12 +74,11 @@ public:
     //输入：想要清空数据的表名
     //输出：删除的记录数量
     int deleteRecord(std::string table_name);
-    //功能：带条件的删除，删除满足Constraint条件的记录
-    //异常：如果表不存在，则抛出e_table_not_exist异常;如果对应属性不存在，则抛出e_attribute_not_exist异常
-    //     如果where子句数据类型不匹配，则抛出e_data_type_conflict异常
-    //输入：(表名,属性名,条件)
+    //功能带有多个条件的删除，删除满足vector<Constraint>所有条件的记录
+    //异常：如果对应属性不存在，则抛出e_attribute_not_exist异常，如果where子句数据类型不匹配，则抛出e_data_type_conflict异常
+    //输入：(表名,属性集合,约束集合)
     //输出：删除数据的数量
-    int deleteRecord(std::string table_name, std::string target_attr, Constraint target_cons);
+    int deleteRecord(std::string table_name, std::vector<std::string> target_attr, std::vector<Constraint> target_cons);
     //功能：对表中的记录创建索引
     //异常：如果表不存在，则抛出e_table_not_exist异常;如果对应属性不存在，则抛出e_attribute_not_exist异常
     //输入：(索引管理类对象的引用,表名,属性名)
@@ -99,8 +99,8 @@ private:
     bool judgeConflict(const std::vector<TUPLE>& table_tuples, std::vector<data> &target_value, int attr_index);
     //insertRecord调用的函数，表示在该位置插入一条记录
     void insertOneRecord(char *p, int offset, int len, const std::vector<data> &record_values);
-    //根据条件删除记录
-    int deleteRecordAccordCons(std::string table_name, int block_id, attributes_set target_attr, int attr_index, Constraint target_cons);
+    //根据条件的集合删除元素
+    int deleteRecordAccordCons(std::string table_name, int block_id, attributes_set target_attr, std::vector<int> attr_index, std::vector<Constraint> target_cons);
     //deleteRecord—>deleteRecordAccordCons—>调用的函数，真正地删除一个数据
     char* deleteOneRecord(char *p);
 };

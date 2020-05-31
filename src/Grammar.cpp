@@ -68,7 +68,7 @@ Grammar::check_create_table(std::string &sql, std::string &table_name, std::map<
                     int s = 0;
                     if (split_res[i + 2] == "unique")
                         s -= 100;
-                    name_attr[split_res[i]] = num2str(0);
+                    name_attr[split_res[i]] = num2str(s);
                     i += (s == 0 ? 2 : 3);
                 } else {
                     if (split_res[i + 2] == "(" and split_res[i + 4] == ")" and str2num<int>(split_res[i + 3])) {
@@ -102,7 +102,7 @@ Error Grammar::check_select(std::string &sql, std::map<std::string, std::vector<
     clause_content["attr"] = *t1;
     clause_content["from"] = *t2;
     clause_content["where"] = *t3;
-    for (auto it = split_res.begin(); it < split_res.end(); ++it) {
+    for (auto it = split_res.begin(); it < split_res.end();) {
         if (*it == "select") {
             it++;
             while (*it != "from" and it < split_res.end()) {
@@ -215,15 +215,13 @@ Error Grammar::check_insert_table(std::string &sql, std::string &table, std::vec
 
 Error Grammar::check_delete_table(std::string &sql, std::string &table, std::vector<std::string> &conds) {
     auto split_res = split(sql, ' ');
+    if (split_res[1] != "from")
+        return syntax_error;
+    table = split_res[2];
     if (split_res.size() == 3) {
-        if (split_res[1] == "from") {
-            table = split_res[2];
-            return successful;
-        } else {
-            return syntax_error;
-        }
+        return successful;
     } else {
-        if (split_res[1] == "from" and split_res[3] == "where") {
+        if (split_res[3] == "where") {
             auto it = split_res.begin() + 4;
             while (it < split_res.end()) {
                 if (*it == "and") {
@@ -246,9 +244,9 @@ Error Grammar::check_delete_table(std::string &sql, std::string &table, std::vec
                 tmp += *it, it++;
                 conds.push_back(tmp);
             }
+            return successful;
         } else {
             return syntax_error;
         }
     }
-    return successful;
 }

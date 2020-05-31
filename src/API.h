@@ -14,29 +14,33 @@
 
 class API {
 private:
-    static int check_type (std::string& val);
+    static int check_type(std::string &val);
+
+    static CONSTRAINT check_cons(std::string &str);
+
+    bool find_del(data &d, TUPLE &t);
 
 protected:
     catalog_manager catalogManager;
 
-    static RecordManager rec_manager;
+    RecordManager rec_manager;
 
     table joinTable(std::vector<table> &tables);
 
 public:
-    static Error create_table(std::string &table_name, attributes_set &attrs, Index &index, int pk);
+    Error create_table(std::string &table_name, attributes_set &attrs, Index &index, int pk);
 
-    static Error create_index(std::string &index_name, std::string &table_name, std::string &column_name);
+    Error create_index(std::string &index_name, std::string &table_name, std::string &column_name);
 
-    static Error drop_table(std::string &table_name);
+    Error drop_table(std::string &table_name);
 
-    Error drop_index(std::string &index_name);
+    static Error drop_index(std::string &index_name);
 
-    Error insert_table(std::string &table_name, std::vector<std::string> values);
+    Error insert_table(std::string &table_name, std::vector<std::string> &values);
 
-    Error select(std::string &table_name, std::vector<std::string> conditions);
+    table select(std::vector<std::string> &attrs, std::vector<std::string> &tables, std::vector<std::string> &conds);
 
-    Error delete_table(std::string &table_name, std::vector<std::string> conditions);
+    int delete_table(std::string &table_name, std::vector<std::string> &conditions);
 
 };
 

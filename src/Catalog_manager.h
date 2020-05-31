@@ -24,12 +24,12 @@ private:
 
     static bool hasattribute(std::string &table_name, std::string &attr_name);
 
-    static int hastable(std::string &table_name);
-
 public:
     catalog_manager() = default;
 
     ~catalog_manager() = default;
+
+    static int hastable(std::string &table_name);
 
     static Error createtable(std::string &table_name, attributes_set &attrs, Index &index, int pk);
 
@@ -42,6 +42,10 @@ public:
     static attributes_set getAllattrs(std::string &table_name);
 
     static Index getAllindex(std::string &table_name);
+
+    static int getIndexType(std::string &index_name, std::string &table_name);
+
+    static bool check_unique(std::string &table_name, std::string attr_name);
 };
 
 #endif //MINISQL_CATALOG_MANAGER_H

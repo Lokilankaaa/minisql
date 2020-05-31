@@ -209,8 +209,8 @@ Error catalog_manager::dropindex(std::string &table_name, std::string &index_nam
     auto n_index = getAllindex(table_name);
     for (int i = 0; i < n_index.num; ++i) {
         if (n_index.name[i] == index_name) {
-            n_index.name[i] = n_index.name[n_index.num-1];
-            n_index.location[i] = n_index.location[n_index.num-1];
+            n_index.name[i] = n_index.name[n_index.num - 1];
+            n_index.location[i] = n_index.location[n_index.num - 1];
             n_index.num--;
             auto attrs = getAllattrs(table_name);
             droptable(table_name);
@@ -219,4 +219,25 @@ Error catalog_manager::dropindex(std::string &table_name, std::string &index_nam
         }
     }
     return successful;
+}
+
+int catalog_manager::getIndexType(std::string &index_name, std::string &table_name) {
+    auto idxs = getAllindex(table_name);
+    auto attrs = getAllattrs(table_name);
+    int pos;
+    for (int i = 0; i < idxs.num; i++) {
+        if (idxs.name[i] == index_name)
+            pos = idxs.location[i];
+    }
+    return attrs.type[pos];
+}
+
+bool catalog_manager::check_unique(std::string &table_name, std::string attr_name) {
+    auto attrs = getAllattrs(table_name);
+    int pos = 0;
+    for (int i = 0; i < attrs.num; ++i) {
+        if (attrs.name[i] == attr_name)
+            pos = i;
+    }
+    return attrs.unique[pos];
 }

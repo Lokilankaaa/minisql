@@ -32,13 +32,13 @@ public:
 
     void exec_select(std::string &sql);
 
-    static void exec_create_table(std::string &sql);
+    void exec_create_table(std::string &sql);
 
-    static void exec_create_index(std::string &sql);
+    void exec_create_index(std::string &sql);
 
-    static void exec_drop_table(std::string &sql);
+    void exec_drop_table(std::string &sql);
 
-    void exec_drop_index(std::string &sql);
+    static void exec_drop_index(std::string &sql);
 
     void exec_delete_table(std::string &sql);
 

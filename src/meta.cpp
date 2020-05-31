@@ -79,5 +79,9 @@ Error table::deleteTuple(int pos) {
     }
 }
 
+int table::getTupleSize() const {
+    return tuples.size();
+}
+
 table::~table() = default;
 

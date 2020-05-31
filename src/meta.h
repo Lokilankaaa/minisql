@@ -17,6 +17,10 @@ struct data {
     int int_data{0};
     float float_data{0};
     std::string char_data;
+public:
+    bool operator==(const data &d) const {
+        return type == d.type and int_data == d.int_data and float_data == d.float_data and char_data == d.char_data;
+    }
 };
 
 struct Index {
@@ -26,7 +30,7 @@ struct Index {
 };
 
 struct attributes_set {
-    int num;//number of attributes
+    int num{0};//number of attributes
     std::string name[32]; //name of each attribute
     int type[32]; // type of each attribute
     bool unique[32]{false}; // whether it's unique
@@ -52,8 +56,9 @@ public:
     int getTupleSize() const;
 
     //lfy add: using for record_manager
-    void setState() {state= true;};
-    bool getState() const {return state;};
+    void setState() { state = true; };
+
+    bool getState() const { return state; };
 };
 
 class table {
@@ -72,6 +77,8 @@ public:
     Error addTuple(const TUPLE &t);
 
     Error deleteTuple(int pos);
+
+    int getTupleSize() const;
 
     //index func placeholder
 
@@ -98,16 +105,16 @@ public:
  *
  * table resTable = selectRecord(table_name, temp_attr, temp_con);
  */
-typedef enum{
+typedef enum {
     LESS,
     LESS_OR_EQUAL,
     EQUAL,
     MORE_OR_EQUAL,
     MORE,
     NOT_EQUAL
-}CONSTRAINT;
+} CONSTRAINT;
 
-struct Constraint{
+struct Constraint {
     data conData;               //Data for relationship constraints
     CONSTRAINT conSymbol;       //Symbols of relation constraints
 };

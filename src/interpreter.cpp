@@ -110,11 +110,47 @@ void Interpreter::execute() {
     }
 
     catch (const e_table_exist &e) {
-        std::cout << "minisql > table exists!" << std::endl;
+        std::cout << "minisql > ERROR! Table exists!" << std::endl;
     }
 
     catch (const e_table_not_exist &e) {
-        std::cout << "minisql > table doesn't exist!" << std::endl;
+        std::cout << "minisql > ERROR! Table doesn't exist!" << std::endl;
+    }
+
+    catch (const e_attribute_not_exist &e) {
+        std::cout << "minisql > ERROR! The attribute doesn't exist." << std::endl;
+    }
+
+    catch (const e_index_exist &e) {
+        std::cout << "minisql > ERROR! The index has existed." << std::endl;
+    }
+
+    catch (const e_index_not_exist &e) {
+        std::cout << "minisql > ERROR! The index doesn't existed." << std::endl;
+    }
+
+    catch (const e_index_full &e) {
+        std::cout << "minisql > ERROR! The number of index of the table has been full." << std::endl;
+    }
+
+    catch (const e_tuple_type_conflict &e) {
+        std::cout << "minisql > ERROR! The tuple inserted is not compatibale with the table." << std::endl;
+    }
+
+    catch (const e_data_type_conflict &e) {
+        std::cout << "minisql > ERROR! The data type is not compatibale with the table." << std::endl;
+    }
+
+    catch (const e_unique_conflict &e) {
+        std::cout << "minisql > ERROR! The same unique data has been inserted." << std::endl;
+    }
+
+    catch (const e_primary_key_conflict &e) {
+        std::cout << "minisql > ERROR! The data with same pk has been inserted." << std::endl;
+    }
+
+    catch (const e_index_define_error &e) {
+        std::cout << "minisql > ERROR! Index created in normal attribute." << std::endl;
     }
 }
 
@@ -150,7 +186,7 @@ void Interpreter::exec_create_table(std::string &sql) {
         }
         pk = tmp_at[table_name];
         Index i;
-        if (API::create_table(table_name, attrs, i, pk) != successful)
+        if (api.create_table(table_name, attrs, i, pk) != successful)
             throw e_table_exist();
         else {
             std::cout << "minisql > Success!" << std::endl;
@@ -164,7 +200,7 @@ void Interpreter::exec_drop_table(std::string &sql) {
     std::string dropped_table;
     auto res = check_drop_table(sql, dropped_table);
     if (res == successful) {
-        if (API::drop_table(dropped_table) != successful)
+        if (api.drop_table(dropped_table) != successful)
             throw e_table_not_exist();
         else
             std::cout << "minisql > Success!" << std::endl;
@@ -199,21 +235,24 @@ void Interpreter::exec_quit() {
     throw e_exit_command();
 }
 
-void Interpreter::exec_create_index(std::string &sql) {
-    std::string table_name, attr, idx_name;
-    auto res = check_create_index(sql, table_name, attr, idx_name);
+void Interpreter::exec_insert_table(std::string &sql) {
+    std::vector<std::string> vals;
+    std::string table_name;
+    auto res = check_insert_table(sql, table_name, vals);
     if (res == successful) {
-        if (API::create_index(idx_name, table_name, attr) == successful)
+        if (api.insert_table(table_name, vals) == successful)
             std::cout << "minisql > Success!" << std::endl;
     } else {
         throw e_syntax_error();
     }
 }
 
-void Interpreter::exec_drop_index(std::string &sql) {
-    std::string dropped_idx;
-    auto res = check_drop_index(sql, dropped_idx);
-    if (res == successful) { ;
+void Interpreter::exec_create_index(std::string &sql) {
+    std::string table_name, attr, idx_name;
+    auto res = check_create_index(sql, table_name, attr, idx_name);
+    if (res == successful) {
+        if (api.create_index(idx_name, table_name, attr) == successful)
+            std::cout << "minisql > Success!" << std::endl;
     } else {
         throw e_syntax_error();
     }
@@ -223,19 +262,21 @@ void Interpreter::exec_delete_table(std::string &sql) {
     std::string table_name;
     std::vector<std::string> conds;
     auto res = check_delete_table(sql, table_name, conds);
-    if (res == successful) { ;
+    if (res == successful) {
+        auto num = api.delete_table(table_name, conds);
+        if (num >= 0)
+            std::cout << "minisql > " << num << " records deleted!" << std::endl;
     } else {
         throw e_syntax_error();
     }
 }
 
-void Interpreter::exec_insert_table(std::string &sql) {
-    std::vector<std::string> vals;
-    std::string table_name;
-    auto res = check_insert_table(sql, table_name, vals);
+void Interpreter::exec_drop_index(std::string &sql) {
+    std::string dropped_idx;
+    auto res = check_drop_index(sql, dropped_idx);
     if (res == successful) {
-        if(api.insert_table(table_name, vals) == successful)
-            std::cout << "minisql > Success!" << std::endl;
+        if (API::drop_index(dropped_idx) == successful)
+            std::cout << "minisql > Successful!" << std::endl;
     } else {
         throw e_syntax_error();
     }
@@ -245,23 +286,9 @@ void Interpreter::exec_select(std::string &sql) {
     std::map<std::string, std::vector<std::string> > clause_content;
     auto res = check_select(sql, clause_content);
     if (res == successful) {
-        auto cols = clause_content["attr"];
-        auto tables = clause_content["from"];
-        auto conds = clause_content["where"];
-        if (cols.size() == 1 and cols[0] == "*") {
-            for (int i = 0; i < tables.size(); ++i) {
+        auto table = api.select(clause_content["attr"], clause_content["from"], clause_content["where"]);
 
-            }
-        } else if (!cols.empty()) {
-
-        } else {
-
-        }
     } else {
         throw e_syntax_error();
     }
-}
-
-table API::joinTable (std::vector<table> &tables) {
-
 }

@@ -9,8 +9,19 @@
 #include <algorithm>
 #include "buffer_manager.h"
 
+#define TYPE_INT -1
+#define TYPE_FLOAT 0
 
-extern BufferManager buffer_manager;
+template<typename T>
+inline void copyString(char *p, int &offset, T data) {
+    std::stringstream stream;
+    stream << data;
+    std::string s1 = stream.str();
+    for (int i = 0; i < s1.length(); i++, offset++)
+        p[offset] = s1[i];
+}
+
+extern BufferManager buf_manager;
 
 using namespace std;
 template <typename T>
@@ -157,7 +168,7 @@ private:
     //用于查找某key值所处的叶结点位置
     void FindToLeaf(Tree node, T key, SearchNodeParse& snp);
     //获取文件大小
-    void GetFile(string file_path);
+    void GetFile(string fname);
     int GetBlockNum(string table_name);
 };
 
@@ -285,9 +296,9 @@ TreeNode<T>* TreeNode<T>::SplitNode(T& key)
             vals[i + min_node_num + 1] = 0;
         }
 
-        new_node->nextLeaf = this->nextLeaf;
+        new_node->next = this->next;
         new_node->parent = this->parent;
-        this->nextLeaf = new_node;
+        this->next = new_node;
 
         new_node->key_num = min_node_num;
         this->key_num = new_node->key_num + 1;
@@ -321,8 +332,7 @@ unsigned int TreeNode<T>::AddKey(T& key)
             return index;
         }
         else {
-            cout << "error in Add (T& key), key has already existed!!" << endl;
-            exit(0);
+            throw e_index_exist();
         }
     }
 }
@@ -334,7 +344,7 @@ unsigned int TreeNode<T>::AddKey(T& key, int value)
     bool exist = FindKey(key, index);
 
     if (!isleaf) {
-        cout << "error in Add(T & key), this isn't a leaf node!! " << endl;
+        throw e_index_not_exist();
         return -1;
     }
 
@@ -348,7 +358,7 @@ unsigned int TreeNode<T>::AddKey(T& key, int value)
         if (!exist) {
             for (unsigned int i = key_num; i > index; i--) {
                 keys[i] = keys[i - 1];
-                vals[i] = keys[i - 1];
+                vals[i] = vals[i - 1];
             }
             key_num++;
             keys[index] = key;
@@ -356,8 +366,7 @@ unsigned int TreeNode<T>::AddKey(T& key, int value)
             return index;
         }
         else {
-            cout << "error in Add (T& key), key has already existed!!" << endl;
-            exit(0);
+            throw e_index_exist();
         }
     }
     return 0;
@@ -367,7 +376,7 @@ template<class T>
 bool TreeNode<T>::DeleteKeyByIndex(unsigned int index)
 {
     if (index > key_num) {
-        cout << "error in DeleteKeyByIndex(unsigned int index), index is more than key_num!" << endl;
+        throw e_index_full();
         return false;
     }
     else {
@@ -476,7 +485,7 @@ void BPlusTree<T>::FindToLeaf(Tree node, T key, SearchNodeParse& snp)
 
             snp.pNode = node;
             snp.index = 0;
-            snp->ifFound = true;
+            snp.ifFound = true;
         }
         else {
             snp.pNode = node;
@@ -503,12 +512,12 @@ bool BPlusTree<T>::InsertKey(T& key, int val)
         InitTree();
     FindToLeaf(root, key, snp);
     if (snp.ifFound) {
-        cout << "error in InsertKey, a duplicated key!!" << endl;
+        throw e_unique_conflict();
         return false;
     }
     else {
         key_num++;
-        snp.pNode->Addkey(key, val);
+        snp.pNode->AddKey(key, val);
         if (snp.pNode->key_num == degree)
             AdjustAfterInsert(snp.pNode);
         return true;
@@ -538,8 +547,7 @@ bool BPlusTree<T>::AdjustAfterInsert(Tree node)
     }
     else {
         if (!root) {
-            cout << "error in AdjustAfterInsert, cannot allocate memory for the new root!!" << endl;
-            exit(0);
+            throw e_exit_command();
         }
         else {
             node_num++;
@@ -560,7 +568,7 @@ template <class T>
 int BPlusTree<T>::SearchVal(T& key)
 {
     if (!root) {
-        cout << "error in SearchVal, the tree is empty!!" << endl;
+        throw e_index_not_exist();
         return -1;
     }
     SearchNodeParse snp;
@@ -581,20 +589,20 @@ bool BPlusTree<T>::DeleteKey(T& key)
     bool if_found;
 
     if (!root) {
-        cout << "error in DeleteKey, the tree is empty!!" << endl;
+        throw e_index_not_exist();
         return false;
     }
     else {
         FindToLeaf(root, key, snp);
         if (!snp.ifFound) {
-            cout << "error in DeleteKey, no such key!!" << endl;
+            throw e_index_not_exist();
             return false;
         }
         else {
             if (snp.pNode->IsRoot()) {
                 key_num--;
                 snp.pNode->DeleteKeyByIndex(snp.index);
-                return AdjustAfterDelete();
+                return AdjustAfterDelete(snp.pNode);
             }
             else {
                 if (!snp.index && leaf_head != snp.pNode) {
@@ -613,12 +621,12 @@ bool BPlusTree<T>::DeleteKey(T& key)
                     key_num--;
                     current_parent->keys[index] = snp.pNode->keys[1];
                     snp.pNode->DeleteKeyByIndex(snp.index);
-                    return AdjustAfterDelete();
+                    return AdjustAfterDelete(snp.pNode);
                 }
                 else {
                     key_num--;
                     snp.pNode->DeleteKeyByIndex(snp.index);
-                    return AdjustAfterDelete();
+                    return AdjustAfterDelete(snp.pNode);
                 }
             }
         }
@@ -633,18 +641,18 @@ bool BPlusTree<T>::AdjustAfterDelete(Tree node)
     unsigned int min_key_num = (degree - 1) / 2;
     unsigned int index = 0;
     //三种不需要调整的情况
-    if (((node->isLeaf) && (node->num >= min_key_num)) ||
-        ((degree != 3) && (!node->isLeaf) && (node->num >= min_key_num - 1)) ||
-        ((degree == 3) && (!node->isLeaf) && (node->num < 0))) {
+    if (((node->isleaf) && (node->key_num >= min_key_num)) ||
+        ((degree != 3) && (!node->isleaf) && (node->key_num >= min_key_num - 1)) ||
+        ((degree == 3) && (!node->isleaf) && (node->key_num < 0))) {
         return  true;
 
     }
 
     if (node->IsRoot()) { //当前结点为根结点
-        if (node->num > 0) //不需要调整
+        if (node->key_num > 0) //不需要调整
             return true;
         else { //正常需要调整
-            if (root->isleaf()) { //将成为空树情况
+            if (root->isleaf) { //将成为空树情况
                 delete node;
                 leaf_head = root = NULL;
                 level--;
@@ -661,8 +669,8 @@ bool BPlusTree<T>::AdjustAfterDelete(Tree node)
     }
     else { //非根节点情况
         Tree parent = node->parent, brother = NULL;
-        if (node->isleaf()) { //当前为叶节点
-            parent->findKey(node->keys[0], index);
+        if (node->isleaf) { //当前为叶节点
+            parent->FindKey(node->keys[0], index);
             //选择左兄弟
             if ((parent->children[0] != node) && (index + 1 == parent->key_num)) {
                 brother = parent->children[index];
@@ -741,15 +749,14 @@ bool BPlusTree<T>::AdjustAfterDelete(Tree node)
             if ((parent->children[0] != node) && (index + 1 == parent->key_num)) {
                 brother = parent->children[index];
                 if (brother->key_num > min_key_num - 1) {
-                    node->children[node->key_num + 1] = node->children[node->num];
+                    node->children[node->key_num + 1] = node->children[node->key_num];
                     for (unsigned int i = node->key_num; i > 0; i--) {
                         node->children[i] = node->children[i - 1];
                         node->keys[i] = node->keys[i - 1];
                     }
                     node->children[0] = brother->children[brother->key_num];
                     node->keys[0] = parent->keys[index];
-                    node->num++;
-
+                    node->key_num++;
                     parent->keys[index] = brother->keys[brother->key_num - 1];
 
                     if (brother->children[brother->key_num])
@@ -805,7 +812,7 @@ bool BPlusTree<T>::AdjustAfterDelete(Tree node)
                 }
                 else {
 
-                    node->keys[node->num] = parent->keys[index];
+                    node->keys[node->key_num] = parent->keys[index];
 
                     if (node == parent->children[0])
                         parent->DeleteKeyByIndex(0);
@@ -883,9 +890,9 @@ void BPlusTree<T>::SearchRange(T& key1, T& key2, vector<int>& vals, int flag)
         index = snp2.index;
 
         do {
-            finished = node->FindRange2(index, vals);
+            finished = node->FindLower(index, vals);
             index = 0;
-            if (!(node->nextLeafNode))
+            if (!(node->next))
                 break;
             else
                 node = node->nextLeaf();
@@ -901,9 +908,9 @@ void BPlusTree<T>::SearchRange(T& key1, T& key2, vector<int>& vals, int flag)
             index = snp2.index;
 
             do {
-                finished = node->FindRange(index, key1, vals);
+                finished = node->FindHigher(index, key1, vals);
                 index = 0;
-                if (!(node->nextLeafNode))
+                if (!(node->next))
                     break;
                 else
                     node = node->nextLeaf();
@@ -914,9 +921,9 @@ void BPlusTree<T>::SearchRange(T& key1, T& key2, vector<int>& vals, int flag)
             index = snp1.index;
 
             do {
-                finished = node->FindRange(index, key2, vals);
+                finished = node->FindHigher(index, key2, vals);
                 index = 0;
-                if (!(node->nextLeafNode))
+                if (!(node->next))
                     break;
                 else
                     node = node->nextLeaf();
@@ -941,7 +948,7 @@ int BPlusTree<T>::GetBlockNum(string table_name)
     char* p;
     int block_num = -1;
     do {
-        p = buffer_manager.getPage(table_name, block_num + 1);
+        p = buf_manager.getPage(table_name, block_num + 1);
         block_num++;
     } while (p[0] != '\0');
     return block_num;
@@ -960,7 +967,7 @@ void BPlusTree<T>::ReadFromDiskAll()
 
     for (int i = 0; i < block_num; i++) {
         //获取当前块的句柄
-        char* p = buffer_manager.getPage(fname, i);
+        char* p = buf_manager.getPage(fname, i);
         //char* t = p;
         //遍历块中所有记录
 
@@ -1015,7 +1022,7 @@ void BPlusTree<T>::WrittenBackToDiskAll()
     Tree ntmp = leaf_head;
 
     for (j = 0, i = 0; ntmp != NULL; j++) {
-        char* p = buffer_manager.getPage(fname, j);
+        char* p = buf_manager.getPage(fname, j);
         offset = 0;
         memset(p, 0, PAGESIZE);
 
@@ -1031,18 +1038,18 @@ void BPlusTree<T>::WrittenBackToDiskAll()
 
         p[offset] = '\0';
 
-        page_id = buffer_manager.getPageId(fname, j);
-        buffer_manager.modifyPage(page_id);
+        page_id = buf_manager.getPageId(fname, j);
+        buf_manager.modifyPage(page_id);
 
-        ntmp = ntmp->nextLeafNode;
+        ntmp = ntmp->next;
     }
 
     while (j < block_num) {
-        char* p = buffer_manager.getPage(fname, j);
+        char* p = buf_manager.getPage(fname, j);
         memset(p, 0, PAGESIZE);
 
-        int page_id = buffer_manager.getPageId(fname, j);
-        buffer_manager.modifyPage(page_id);
+        int page_id = buf_manager.getPageId(fname, j);
+        buf_manager.modifyPage(page_id);
 
         j++;
     }

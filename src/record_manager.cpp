@@ -204,8 +204,8 @@ char* RecordManager::deleteOneRecord(char *p){
     return p;
 }
 
-//根据条件删除记录
-int RecordManager::deleteRecordAccordCons(std::string table_name, int block_id, attributes_set target_attr, int attr_index, Constraint target_cons){
+
+int RecordManager::deleteRecordAccordCons(std::string table_name, int block_id, attributes_set target_attr, std::vector<int> attr_index, std::vector<Constraint> target_cons){
     std::string temp_path = DATA_FILE_PATH + table_name;
     char *p = buf_manager.getPage(temp_path, block_id);
     char *temp = p;
@@ -215,32 +215,35 @@ int RecordManager::deleteRecordAccordCons(std::string table_name, int block_id, 
         if(*p=='\0' || p>=temp+PAGESIZE) break;
         TUPLE tuple = readOneTuple(p, target_attr);
         std::vector<data> allData = tuple.getData();
-        if(target_attr.type[attr_index]==-1){
-            //int
-            if(satisfyWithCondition(allData[attr_index].int_data, target_cons.conData.int_data, target_cons)==true){
-                p = deleteOneRecord(p);
-                count++;
-            } else{
-                p = p + getTupleLength(p);
+        bool judge = true;
+        for(int i=0; i<attr_index.size(); i++){
+            //遍历查看该项是否满足删除的条件
+            if(target_attr.type[attr_index[i]]==-1){
+                //int
+                if(satisfyWithCondition(allData[attr_index[i]].int_data, target_cons[i].conData.int_data, target_cons[i])==false){
+                    judge = false;
+                }
+            }
+            else if(target_attr.type[attr_index[i]]==0){
+                //float
+                if(satisfyWithCondition(allData[attr_index[i]].float_data, target_cons[i].conData.float_data, target_cons[i])==false){
+                    judge = false;
+                }
+            }
+            else{
+                //char
+                if(satisfyWithCondition(allData[attr_index[i]].char_data, target_cons[i].conData.char_data, target_cons[i])==false){
+                    judge = false;
+                }
             }
         }
-        else if(target_attr.type[attr_index]==0){
-            //float
-            if(satisfyWithCondition(allData[attr_index].float_data, target_cons.conData.float_data, target_cons)==true){
-                p = deleteOneRecord(p);
-                count++;
-            } else{
-                p = p + getTupleLength(p);
-            }
-        }
-        else{
-            //char
-            if(satisfyWithCondition(allData[attr_index].char_data, target_cons.conData.char_data, target_cons)==true){
-                p = deleteOneRecord(p);
-                count++;
-            } else{
-                p = p + getTupleLength(p);
-            }
+        if(judge==true){
+            //代表满足条件
+            p = deleteOneRecord(p);
+            count++;
+        } else{
+            //如果不满足条件则下一条记录
+            p = p + getTupleLength(p);
         }
     }
     //标记该块已经被修改
@@ -488,56 +491,6 @@ int RecordManager::deleteRecord(std::string table_name){
     return count;
 }
 
-
-//功能：带条件的删除，删除满足Constraint条件的记录
-//异常：如果表不存在，则抛出e_table_not_exist异常;如果对应属性不存在，则抛出e_attribute_not_exist异常
-//     如果where子句数据类型不匹配，则抛出e_data_type_conflict异常
-//输入：(表名,属性名,条件)
-//输出：删除数据的数量
-int RecordManager::deleteRecord(std::string table_name, std::string target_attr, Constraint target_cons){
-    std::string temp_path = DATA_FILE_PATH + table_name;
-    catalog_manager cate;
-    attributes_set allAttr = cate.getAllattrs(table_name);
-    //标记对应属性的下标位置
-    int index = -1;
-    //标记是否存在索引
-    bool judge = false;
-    for(int i=0; i<allAttr.num; i++){
-        if(allAttr.name[i] == target_attr){
-            //如果有属性是对应的
-            index = i;
-            if(allAttr.hasIndex[i] == true)
-                judge = true;
-            break;
-        }
-    }
-    //如果没有对应的下标，那么说明产生错误
-    if(index==-1) throw e_attribute_not_exist();
-    //如果对应的条件的数据类型不匹配
-    if(allAttr.type[index] != target_cons.conData.type) throw e_data_type_conflict();
-
-    //接着开始正式删除数据
-    //count用于记录删除数据的数量
-    int count=0;
-    if(judge== true && target_cons.conSymbol!=NOT_EQUAL){
-        //如果是存在索引的
-        std::vector<int> which_blocks;
-        searchBlockWithIndex(table_name, target_attr, target_cons, which_blocks);
-        for(int i=0; i<which_blocks.size(); i++){
-            count = count + deleteRecordAccordCons(table_name, which_blocks[i], allAttr, index, target_cons);
-        }
-    }
-    else{
-        //如果没有索引
-        int count_block = countBlockNum(temp_path);
-        if(count_block <= 0) return 0;
-        for(int i=0; i < count_block; i++){
-            count += deleteRecordAccordCons(table_name, i, allAttr, index, target_cons);
-        }
-    }
-    return count;
-}
-
 //功能：对表中的记录创建索引
 //异常：如果表不存在，则抛出e_table_not_exist异常;如果对应属性不存在，则抛出e_attribute_not_exist异常
 //输入：(索引管理类对象的引用,表名,属性名)
@@ -579,19 +532,67 @@ void RecordManager::createIndex(IndexManager &index_manager, std::string table_n
     }
 }
 
+//功能带有多个条件的删除，删除满足vector<Constraint>所有条件的记录
+//异常：如果对应属性不存在，则抛出e_attribute_not_exist异常，如果where子句数据类型不匹配，则抛出e_data_type_conflict异常
+//输入：(表名,属性集合,约束集合)
+//输出：删除数据的数量
+int RecordManager::deleteRecord(std::string table_name, std::vector<std::string> target_attr, std::vector<Constraint> target_cons){
+    std::string temp_path = DATA_FILE_PATH + table_name;
+    catalog_manager cate;
+    attributes_set allAttr = cate.getAllattrs(table_name);
 
+    //构建表示目标属性下标和是否有索引的vector容器
+    std::vector<int> index;
+    std::vector<bool> flag;
+    //判断是否某块上存在索引
+    int judge = false;
+    for(int i=0; i<target_attr.size(); i++){
+        index.push_back(-1);
+        flag.push_back(false);
+        for(int j=0; j<allAttr.num; j++){
+            if(allAttr.name[j] == target_attr[i]){
+                index[i] = j;
+                if(allAttr.hasIndex[j] == true){
+                    flag[i] = true;
+                    if(target_cons[i].conSymbol!=NOT_EQUAL) judge = true;
+                }
+                break;
+            }
+        }
+        //如果没有找到对应的index则抛出异常
+        if(index[i] == -1) throw e_attribute_not_exist();
+    }
+    //遍历查看条件和数据是否匹配
+    for(int i=0; i<target_cons.size(); i++){
+        if(target_cons[i].conData.type != allAttr.type[index[i]]) throw e_data_type_conflict();
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    int count = 0;
+    if(judge==true){
+        //如果某一项存在索引而且该项的条件不是NOT_EQUAL
+        std::set<int> final;
+        for(int i=0; i<flag.size(); i++){
+            //找出每一个条件所满足的block
+            if(flag[i]==true && target_cons[i].conSymbol != NOT_EQUAL){
+                std::vector<int> block_ids;
+                searchBlockWithIndex(table_name, target_attr[i], target_cons[i], block_ids);
+                for(int j=0; j<block_ids.size(); j++){
+                    //插入到set当中
+                    final.insert(block_ids[i]);
+                }
+            }
+        }
+        for(auto i=final.begin(); i!=final.end(); i++){
+            count += deleteRecordAccordCons(table_name, *i, allAttr, index, target_cons);
+        }
+    }
+    else{
+        //如果不存在索引那么就需要遍历所有的块了
+        int block_num = countBlockNum(temp_path);
+        if(block_num==0) return 0;
+        for(int i=0; i<block_num; i++){
+            count += deleteRecordAccordCons(table_name, i, allAttr, index, target_cons);
+        }
+    }
+    return count;
+}

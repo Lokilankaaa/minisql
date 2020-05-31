@@ -18,8 +18,8 @@ void writeInto(char *p, int &offset, T oneData){
     std::stringstream is;
     is << oneData;
     std::string stringData = is.str();
-    for(int i=0; i<stringData.length(); i++){
-        p[offset++] = stringData[i];
+    for(char i : stringData){
+        p[offset++] = i;
     }
 }
 
@@ -27,28 +27,22 @@ void writeInto(char *p, int &offset, T oneData){
 template<typename T>
 bool satisfyWithCondition(T first, T second, Constraint rel){
     if(rel.conSymbol==LESS){
-        if(first < second) return true;
-        else return false;
+        return first < second;
     }
     else if(rel.conSymbol==LESS_OR_EQUAL){
-        if(first <= second) return true;
-        else return false;
+        return first <= second;
     }
     else if(rel.conSymbol==EQUAL){
-        if(first == second) return true;
-        else return false;
+        return first == second;
     }
     else if(rel.conSymbol==MORE_OR_EQUAL){
-        if(first >= second) return true;
-        else return false;
+        return first >= second;
     }
     else if(rel.conSymbol==MORE){
-        if(first > second) return true;
-        else return false;
+        return first > second;
     }
     else if(rel.conSymbol==NOT_EQUAL){
-        if(first != second) return true;
-        else return false;
+        return first != second;
     }
 }
 
