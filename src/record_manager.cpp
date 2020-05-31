@@ -375,7 +375,11 @@ void RecordManager::insertRecord(std::string table_name, TUPLE& tuple){
     //检查属性是不是一一对应
     std::vector<data> values = tuple.getData();
     for(int i=0; i<values.size(); i++){
-        if(values[i].type != allAttr.type[i])
+        if(values[i].type>0){
+            if(values[i].type > values[i].char_data.length())
+                throw e_tuple_type_conflict();
+        }
+        else if(values[i].type != allAttr.type[i])
             throw e_tuple_type_conflict();
     }
     //检查是否存在主键冲突
@@ -393,6 +397,15 @@ void RecordManager::insertRecord(std::string table_name, TUPLE& tuple){
             }
         }
     }
+    //检查长度是否符合要求
+//    std::vector<data> checkData = tuple.getData();
+//    for(int i=0; i<values.size(); i++){
+//        if(values[i].type > 0){
+//            //代表是char类型
+//            if(values[i].type < checkData[i].char_data.length())
+//                throw e_tuple_type_conflict();
+//        }
+//    }
 
     //接下来处理数据的插入
     int count_block = countBlockNum(temp_path);

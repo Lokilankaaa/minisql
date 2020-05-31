@@ -18,14 +18,16 @@ private:
 
     static CONSTRAINT check_cons(std::string &str);
 
-    bool find_del(data &d, TUPLE &t);
+    static void find_del(data &d, std::vector<data> &vd);
+
+    static bool find_in (data &d, std::vector<data> &vd);
 
 protected:
     catalog_manager catalogManager;
 
     RecordManager rec_manager;
 
-    table joinTable(std::vector<table> &tables);
+    static table joinTable(std::vector<table> &tables);
 
 public:
     Error create_table(std::string &table_name, attributes_set &attrs, Index &index, int pk);

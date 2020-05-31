@@ -31,7 +31,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
 }
 
 Error
-Grammar::check_create_table(std::string &sql, std::string &table_name, std::map<std::string, std::string> &name_attr) {
+Grammar::check_create_table(std::string &sql, std::string &table_name, std::map<std::string, std::string> &name_attr, std::vector<std::string> &order) {
     auto split_res = split(sql, ' ');
     auto end_pos = split_res.size() - 1;
     table_name = split_res[2];
@@ -45,6 +45,7 @@ Grammar::check_create_table(std::string &sql, std::string &table_name, std::map<
                 else {
                     if (split_res[i] == "(" and split_res[i + 2] == ")") {
                         name_attr[split_res[2]] = split_res[i + 1];
+                        order.push_back(table_name);
                         if (split_res[i + 3] == ",") {
                             i += 4;
                         } else if (split_res[i + 3] == ")") {
@@ -63,12 +64,14 @@ Grammar::check_create_table(std::string &sql, std::string &table_name, std::map<
                         s *= 1000;
                     }
                     name_attr[split_res[i]] = num2str(s);
+                    order.push_back(split_res[i]);
                     i += (s == -1 ? 2 : 3);
                 } else if (split_res[i + 1] == "float") {
                     int s = 0;
                     if (split_res[i + 2] == "unique")
                         s -= 100;
                     name_attr[split_res[i]] = num2str(s);
+                    order.push_back(split_res[i]);
                     i += (s == 0 ? 2 : 3);
                 } else {
                     if (split_res[i + 2] == "(" and split_res[i + 4] == ")" and str2num<int>(split_res[i + 3])) {
@@ -76,6 +79,7 @@ Grammar::check_create_table(std::string &sql, std::string &table_name, std::map<
                         if (split_res[i + 5] == "unique")
                             s *= 1000;
                         name_attr[split_res[i]] = num2str(s);
+                        order.push_back(split_res[i]);
                         i += (s < 1000 ? 5 : 6);
                     } else {
                         return syntax_error;
@@ -87,6 +91,12 @@ Grammar::check_create_table(std::string &sql, std::string &table_name, std::map<
                     return syntax_error;
             } else {
                 return syntax_error;
+            }
+        }
+        for (auto j = order.begin(); j < order.end(); ++j) {
+            if(*j == table_name) {
+                order.erase(j);
+                break;
             }
         }
     } else

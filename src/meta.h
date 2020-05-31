@@ -55,10 +55,13 @@ public:
 
     int getTupleSize() const;
 
+
+
     //lfy add: using for record_manager
     void setState() { state = true; };
 
     bool getState() const { return state; };
+
 };
 
 class table {

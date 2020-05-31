@@ -91,12 +91,12 @@ Error API::create_index(std::string &index_name, std::string &table_name, std::s
 }
 
 Error API::drop_index(std::string &index_name) {
-    auto file_path = IndexManager::FindTableName(index_name);
-    auto table_name = split(file_path, '_').back();
-    catalog_manager::dropindex(table_name, index_name);
-    IndexManager idx_manager(table_name);
-    auto type = catalog_manager::getIndexType(index_name, table_name);
-    idx_manager.DropIndex(file_path, type);
+//    auto file_path = IndexManager::FindTableName(index_name);
+//    auto table_name = split(file_path, '_').back();
+//    catalog_manager::dropindex(table_name, index_name);
+//    IndexManager idx_manager(table_name);
+//    auto type = catalog_manager::getIndexType(index_name, table_name);
+//    idx_manager.DropIndex(file_path, type);
     return successful;
 }
 
@@ -131,6 +131,22 @@ int API::delete_table(std::string &table_name, std::vector<std::string> &conditi
 //只实现单表查询
 table API::select(std::vector<std::string> &attrs, std::vector<std::string> &tables, std::vector<std::string> &conds) {
     if (tables.size() == 1) {
+        if (catalog_manager::hastable(tables[0]) == -1)
+            throw e_table_not_exist();
+        if(attrs[0] != "*") {
+            auto t_attrs = catalog_manager::getAllattrs(tables[0]);
+            bool a_flag = true;
+            for (auto &i:attrs) {
+                bool l_flag = false;
+                for (int j = 0; j < t_attrs.num; j++) {
+                    if (i == t_attrs.name[j])
+                        l_flag = true;
+                }
+                a_flag &= l_flag;
+            }
+            if (!a_flag)
+                throw e_attribute_not_exist();
+        }
         if (conds.empty()) {
             return rec_manager.selectRecord(tables[0]);
         } else {
@@ -157,9 +173,26 @@ table API::select(std::vector<std::string> &attrs, std::vector<std::string> &tab
     }
 }
 
+void API::find_del(data &d, std::vector<data> &vd) {
+    std::vector<data> n_vd;
+    for (auto &i : vd) {
+        if (d == i)
+            n_vd.push_back(i);
+    }
+    vd = n_vd;
+}
+
+bool API::find_in(data &d, std::vector<data> &vd) {
+    for (auto &i:vd) {
+        if (d == i)
+            return true;
+    }
+    return false;
+}
+
 table API::joinTable(vector<table> &tables) {
     auto attrs = tables[0].getAttr();
-    table table("tmp", attrs);
+    table n_table("tmp", attrs);
     int pk = attrs.primary_key;
     vector<data> remain_list(10);
     auto tmp = tables[0].getTuple();
@@ -168,6 +201,13 @@ table API::joinTable(vector<table> &tables) {
     }
     for (auto &t : tables) {
         auto t_tuples = t.getTuple();
-
+        for (auto &i:t_tuples) {
+            find_del(i.getData()[pk], remain_list);
+        }
     }
+    for (auto &i:tmp) {
+        if (find_in(i.getData()[pk], remain_list))
+            n_table.addTuple(i);
+    }
+    return n_table;
 }

@@ -134,11 +134,11 @@ void Interpreter::execute() {
     }
 
     catch (const e_tuple_type_conflict &e) {
-        std::cout << "minisql > ERROR! The tuple inserted is not compatibale with the table." << std::endl;
+        std::cout << "minisql > ERROR! The tuple inserted is not compatible with the table." << std::endl;
     }
 
     catch (const e_data_type_conflict &e) {
-        std::cout << "minisql > ERROR! The data type is not compatibale with the table." << std::endl;
+        std::cout << "minisql > ERROR! The data type is not compatible with the table." << std::endl;
     }
 
     catch (const e_unique_conflict &e) {
@@ -158,8 +158,9 @@ void Interpreter::exec_create_table(std::string &sql) {
     std::map<std::string, std::string> name_attr;
     std::string table_name;
     attributes_set attrs;
+    vector<std::string> order;
     int pk, cnt = 0;
-    auto res = check_create_table(sql, table_name, name_attr);
+    auto res = check_create_table(sql, table_name, name_attr, order);
     if (res == successful) {
         std::map<std::string, int> tmp_at;
         for (auto &i:name_attr) {
@@ -185,6 +186,7 @@ void Interpreter::exec_create_table(std::string &sql) {
             }
         }
         pk = tmp_at[table_name];
+        change_order(attrs, order, pk);
         Index i;
         if (api.create_table(table_name, attrs, i, pk) != successful)
             throw e_table_exist();
@@ -287,8 +289,52 @@ void Interpreter::exec_select(std::string &sql) {
     auto res = check_select(sql, clause_content);
     if (res == successful) {
         auto table = api.select(clause_content["attr"], clause_content["from"], clause_content["where"]);
+        if (table.getTupleSize()) {
+            if (clause_content["attr"].size() == 1 and clause_content["attr"][0] == "*") {
+                for (int i = 0; i < table.getAttr().num; ++i) {
+                    std::cout << "| " << table.getAttr().name[i] << " ";
+                }
+                std::cout << "|" << std::endl;
+                for (int j = 0; j < table.getTupleSize(); ++j) {
+                    for (int i = 0; i < table.getTuple()[j].getTupleSize(); ++i) {
+                        auto type = table.getTuple()[j].getData()[i].type;
+                        if (type == -1)
+                            std::cout << "| " << table.getTuple()[j].getData()[i].int_data << " ";
+                        else if (!type)
+                            std::cout << "| " << table.getTuple()[j].getData()[i].float_data << " ";
+                        else
+                            std::cout << "| " << table.getTuple()[j].getData()[i].char_data << " ";
+                    }
+                    std::cout << "|" << std::endl;
+                }
+            } else if (clause_content["attr"].size() >= 1) {
 
+            } else {
+
+            }
+        } else {
+            std::cout << "minisql > Result is empty!" << std::endl;
+        }
     } else {
         throw e_syntax_error();
     }
+}
+
+void Interpreter::change_order(attributes_set &attrs, vector<std::string> &order, int &pk) {
+    attributes_set n_attrs;
+    n_attrs.num = attrs.num;
+    for (int i = 0; i < order.size(); ++i) {
+        for (int j = 0; j < attrs.num; ++j) {
+            if (order[i] == attrs.name[j]) {
+                n_attrs.name[i] = attrs.name[j];
+                n_attrs.unique[i] = attrs.unique[j];
+                n_attrs.type[i] = attrs.type[j];
+            }
+        }
+    }
+    for (int k = 0; k < order.size(); ++k) {
+        if (n_attrs.name[k] == attrs.name[pk])
+            pk = k, n_attrs.primary_key = pk;
+    }
+    attrs = n_attrs;
 }

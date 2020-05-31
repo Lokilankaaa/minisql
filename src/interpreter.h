@@ -21,6 +21,8 @@ private:
 
     static std::string toLower(std::string str);
 
+    static void change_order(attributes_set &attrs, std::vector<std::string> &order, int &pk);
+
 public:
     Interpreter();
 
