@@ -375,6 +375,11 @@ void RecordManager::insertRecord(std::string table_name, TUPLE& tuple){
     //检查属性是不是一一对应
     std::vector<data> values = tuple.getData();
     for(int i=0; i<values.size(); i++){
+        if(values[i].type==-1 && allAttr.type[i] == 0){
+            //如果attr是int类型，则可以插入float类型的数据
+            values[i].type = 0;
+            values[i].float_data = values[i].int_data;
+        }
         if(values[i].type>0){
             if(values[i].type > values[i].char_data.length())
                 throw e_tuple_type_conflict();
@@ -456,8 +461,7 @@ void RecordManager::insertRecord(std::string table_name, TUPLE& tuple){
             //如果某个属性存在索引
             std::string theName = allAttr.name[i];
             std::string thePath = "index_on_"+theName+"_"+table_name;
-            std::vector<data> allData = tuple.getData();
-            im.InsertIndex(thePath, allData[i], which_block);
+            im.InsertIndex(thePath, values[i], which_block);
         }
     }
 }

@@ -59,7 +59,7 @@ void Interpreter::normalize(std::string &one_sql) {
         it = one_sql.begin();
     }
 
-    one_sql = toLower(one_sql);
+//    one_sql = toLower(one_sql);
 }
 
 Interpreter::Interpreter() = default;
@@ -333,8 +333,10 @@ void Interpreter::change_order(attributes_set &attrs, vector<std::string> &order
         }
     }
     for (int k = 0; k < order.size(); ++k) {
-        if (n_attrs.name[k] == attrs.name[pk])
+        if (n_attrs.name[k] == attrs.name[pk]) {
             pk = k, n_attrs.primary_key = pk;
+            break;
+        }
     }
     attrs = n_attrs;
 }

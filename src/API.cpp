@@ -50,6 +50,8 @@ Error API::drop_table(std::string &table_name) {
 
 Error API::insert_table(std::string &table_name, std::vector<std::string> &values) {
     TUPLE tuple;
+    if (catalog_manager::hastable(table_name) == -1)
+        throw e_table_not_exist();
     auto attrs = catalog_manager::getAllattrs(table_name);
     if (values.size() != attrs.num)
         throw e_syntax_error();
