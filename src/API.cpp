@@ -120,7 +120,7 @@ int API::delete_table(std::string &table_name, std::vector<std::string> &conditi
             } else if (!tmp_data.type) {
                 tmp_data.float_data = str2num<float>(res[2]);
             } else {
-                tmp_data.char_data = res[2];
+                tmp_data.char_data = res[2].substr(1, res[2].size() - 2);
             }
             tmp_con.conData = tmp_data, tmp_con.conSymbol = check_cons(res[1]);
             target_attr.push_back(res[0]);
@@ -135,7 +135,7 @@ table API::select(std::vector<std::string> &attrs, std::vector<std::string> &tab
     if (tables.size() == 1) {
         if (catalog_manager::hastable(tables[0]) == -1)
             throw e_table_not_exist();
-        if(attrs[0] != "*") {
+        if (attrs[0] != "*") {
             auto t_attrs = catalog_manager::getAllattrs(tables[0]);
             bool a_flag = true;
             for (auto &i:attrs) {
@@ -206,7 +206,7 @@ table API::joinTable(vector<table> &tables) {
         auto t_tuples = t.getTuple();
         vector<data> tmp_;
         for (auto &i:t_tuples) {
-            if(find_in(i.getData()[pk], remain_list)){
+            if (find_in(i.getData()[pk], remain_list)) {
                 tmp_.push_back(i.getData()[pk]);
             }
         }
