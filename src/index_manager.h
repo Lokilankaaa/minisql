@@ -28,7 +28,7 @@ public:
     void SearchRange(const string& file_path, data Data1, data Data2, vector<int>& vals);
     //输入index返回对应表的名称
     //返回的是文件名，表名在文件名中
-    static string FindTableName(std::string& index_name);
+    string FindTableName(const string& index_name);
 
 private:
     typedef map<string, BPlusTree<int>*> int_Map;

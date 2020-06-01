@@ -93,12 +93,14 @@ Error API::create_index(std::string &index_name, std::string &table_name, std::s
 }
 
 Error API::drop_index(std::string &index_name) {
-//    auto file_path = IndexManager::FindTableName(index_name);
-//    auto table_name = split(file_path, '_').back();
-//    catalog_manager::dropindex(table_name, index_name);
-//    IndexManager idx_manager(table_name);
-//    auto type = catalog_manager::getIndexType(index_name, table_name);
-//    idx_manager.DropIndex(file_path, type);
+    IndexManager idx_manager_("tmp");
+    auto file_path = idx_manager_.FindTableName(index_name);
+    auto table_name = split(file_path, '_')[split(file_path, '_').size()-2];
+    auto type = catalog_manager::getIndexType(index_name, table_name);
+    file_path = split(file_path, '/').back();
+    catalog_manager::dropindex(table_name, index_name);
+    IndexManager idx_manager(table_name);
+    idx_manager.DropIndex(file_path, type);
     return successful;
 }
 

@@ -160,13 +160,13 @@ Index catalog_manager::getAllindex(std::string &table_name) {
         auto tmp_res = split(i, ' ');
         if (tmp_res[1] == table_name) {
             int offset = str2num<int>(tmp_res[2]);
-            int pos = 2 + 3 * offset + 1;
+            int pos = 2 + 3 * offset + 2;
             int tt = str2num<int>(tmp_res[pos]);
             if (tt == 0)
                 break;
             for (int j = pos + 1; j < pos + 1 + 2 * tt; j += 2) {
-                index.name[cnt] = tmp_res[j];
-                index.location[cnt] = str2num<int>(tmp_res[j + 1]);
+                index.name[cnt] = tmp_res[j + 1];
+                index.location[cnt] = str2num<int>(tmp_res[j]);
                 cnt++;
             }
             index.num = cnt;

@@ -68,7 +68,7 @@ int RecordManager::getTupleLength(char* p){
 void RecordManager::searchBlockWithIndex(std::string table_name, std::string target_attr, Constraint target_cons, std::vector<int> &allBlockId){
     IndexManager im(table_name);
     data temp_data;
-    std::string temp_path = "index_on_"+target_attr+"_"+table_name;
+    std::string temp_path = "INDEX_FILE"+target_attr+"_"+table_name;
     if(target_cons.conSymbol==MORE || target_cons.conSymbol==MORE_OR_EQUAL){
         if(target_cons.conData.type==-1){
             temp_data.type = -1;
@@ -448,7 +448,7 @@ void RecordManager::insertRecord(std::string table_name, TUPLE& tuple){
     else{
         //如果剩下的空间不够插入一个新的数据
         which_block = count_block;
-        char *p = buf_manager.getPage(table_name, which_block);
+        char *p = buf_manager.getPage(temp_path, which_block);
         insertOneRecord(p, 0, len, values);
         int page_id = buf_manager.getPageId(temp_path, which_block);
         buf_manager.modifyPage(page_id);
@@ -460,7 +460,7 @@ void RecordManager::insertRecord(std::string table_name, TUPLE& tuple){
         if(allAttr.hasIndex[i] == true){
             //如果某个属性存在索引
             std::string theName = allAttr.name[i];
-            std::string thePath = "index_on_"+theName+"_"+table_name;
+            std::string thePath = "INDEX_FILE"+theName+"_"+table_name;
             im.InsertIndex(thePath, values[i], which_block);
         }
     }
@@ -491,7 +491,7 @@ int RecordManager::deleteRecord(std::string table_name){
                 if(allAttr.hasIndex[j]== true){
                     //如果有索引的话
                     std::string theName = allAttr.name[i];
-                    std::string thePath = "index_on_"+theName+"_"+table_name;
+                    std::string thePath = "INDEX_FILE"+theName+"_"+table_name;
                     std::vector<data> allData = tuple.getData();
                     im.DeleteIndexByKey(thePath, allData[j]);
                 }
@@ -532,7 +532,7 @@ void RecordManager::createIndex(IndexManager &index_manager, std::string table_n
     int count_block = countBlockNum(temp_path);
     if(count_block <= 0) count_block=1;
     //获取对应表的索引文件
-    std::string indexFilePath = "index_on_"+target_attr+"_"+table_name;
+    std::string indexFilePath = "INDEX_FILE"+target_attr+"_"+table_name;
     for(int i=0; i<count_block; i++){
         char *p = buf_manager.getPage(temp_path, i);
         char *temp = p;
