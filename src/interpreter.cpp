@@ -10,14 +10,6 @@
 #include "error.h"
 #include <vector>
 
-std::string Interpreter::toLower(std::string str) {
-    for (auto i = str.begin(); i < str.end(); ++i) {
-        if (*i >= 'A' and *i <= 'Z')
-            *i += 32;
-    }
-    return str;
-}
-
 void Interpreter::get_script() {
     std::string tmp;
     script.clear();
@@ -43,7 +35,7 @@ void Interpreter::normalize(std::string &one_sql) {
             one_sql[i] = ' ';
     }
 
-    for (auto i = one_sql.begin(); i < one_sql.end();) {
+    for (auto i = one_sql.begin(); i < one_sql.end() - 1;) {
         if (*i == ' ' and *(i + 1) == ' ') {
             auto tmp_i = i - 1;
             one_sql.erase(i);
@@ -403,4 +395,12 @@ std::vector<int> Interpreter::exibit_location(std::string &table_name, std::vect
         }
     }
     return locations;
+}
+
+std::string Interpreter::toLower(std::string str) {
+    for (auto i = str.begin(); i < str.end(); ++i) {
+        if (*i >= 'A' and *i <= 'Z')
+            *i += 32;
+    }
+    return str;
 }

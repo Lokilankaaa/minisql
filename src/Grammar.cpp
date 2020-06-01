@@ -144,7 +144,7 @@ Error Grammar::check_select(std::string &sql, std::map<std::string, std::vector<
         } else if (it < split_res.end() and *it == "where") {
             it++;
             while (it < split_res.end()) {
-                if (it < split_res.end() and *it == "and") {
+                if (*it == "and") {
                     it++;
                     continue;
                 }
