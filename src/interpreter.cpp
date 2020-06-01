@@ -87,7 +87,7 @@ void Interpreter::execute() {
                 throw e_syntax_error();
         } else if (script.substr(0, 6) == "delete")
             exec_delete_table(script);
-        else if (script.substr(0, 4) == "exit" and script[5] == '\0')
+        else if (script.substr(0, 4) == "exit" and script.size() == 4)
             exec_quit();
         else if (script.substr(0, 8) == "execfile")
             execfile(script);
@@ -187,10 +187,14 @@ void Interpreter::exec_create_table(std::string &sql) {
         pk = tmp_at[table_name];
         change_order(attrs, order, pk);
         Index i;
+        auto start = chrono::system_clock::now();
         if (api.create_table(table_name, attrs, i, pk) != successful)
             throw e_table_exist();
         else {
-            std::cout << "minisql > Success!" << std::endl;
+            auto end = chrono::system_clock::now();
+            auto duration =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+            std::cout << "minisql > Success in " << duration.count() << " ms" << std::endl;
         }
     } else {
         throw e_syntax_error();
@@ -201,10 +205,15 @@ void Interpreter::exec_drop_table(std::string &sql) {
     std::string dropped_table;
     auto res = check_drop_table(sql, dropped_table);
     if (res == successful) {
+        auto start = chrono::system_clock::now();
         if (api.drop_table(dropped_table) != successful)
             throw e_table_not_exist();
-        else
-            std::cout << "minisql > Success!" << std::endl;
+        else {
+            auto end = chrono::system_clock::now();
+            auto duration =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+            std::cout << "minisql > Success in " << duration.count() << " ms" << std::endl;
+        }
     } else {
         throw e_syntax_error();
     }
@@ -241,8 +250,13 @@ void Interpreter::exec_insert_table(std::string &sql) {
     std::string table_name;
     auto res = check_insert_table(sql, table_name, vals);
     if (res == successful) {
-        if (api.insert_table(table_name, vals) == successful)
-            std::cout << "minisql > Success!" << std::endl;
+        auto start = chrono::system_clock::now();
+        if (api.insert_table(table_name, vals) == successful) {
+            auto end = chrono::system_clock::now();
+            auto duration =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+            std::cout << "minisql > Success in " << duration.count() << " ms" << std::endl;
+        }
     } else {
         throw e_syntax_error();
     }
@@ -252,8 +266,13 @@ void Interpreter::exec_create_index(std::string &sql) {
     std::string table_name, attr, idx_name;
     auto res = check_create_index(sql, table_name, attr, idx_name);
     if (res == successful) {
-        if (api.create_index(idx_name, table_name, attr) == successful)
-            std::cout << "minisql > Success!" << std::endl;
+        auto start = chrono::system_clock::now();
+        if (api.create_index(idx_name, table_name, attr) == successful) {
+            auto end = chrono::system_clock::now();
+            auto duration =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+            std::cout << "minisql > Success in " << duration.count() << " ms" << std::endl;
+        }
     } else {
         throw e_syntax_error();
     }
@@ -264,9 +283,13 @@ void Interpreter::exec_delete_table(std::string &sql) {
     std::vector<std::string> conds;
     auto res = check_delete_table(sql, table_name, conds);
     if (res == successful) {
+        auto start = chrono::system_clock::now();
         auto num = api.delete_table(table_name, conds);
+        auto end = chrono::system_clock::now();
+        auto duration =
+                std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         if (num >= 0)
-            std::cout << "minisql > " << num << " records deleted!" << std::endl;
+            std::cout << "minisql > " << num << " records deleted in " << duration.count() << " ms" << std::endl;
     } else {
         throw e_syntax_error();
     }
@@ -276,8 +299,13 @@ void Interpreter::exec_drop_index(std::string &sql) {
     std::string dropped_idx;
     auto res = check_drop_index(sql, dropped_idx);
     if (res == successful) {
-        if (API::drop_index(dropped_idx) == successful)
-            std::cout << "minisql > Successful!" << std::endl;
+        auto start = chrono::system_clock::now();
+        if (API::drop_index(dropped_idx) == successful) {
+            auto end = chrono::system_clock::now();
+            auto duration =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+            std::cout << "minisql > Success in " << duration.count() << " ms" << std::endl;
+        }
     } else {
         throw e_syntax_error();
     }
@@ -287,7 +315,11 @@ void Interpreter::exec_select(std::string &sql) {
     std::map<std::string, std::vector<std::string> > clause_content;
     auto res = check_select(sql, clause_content);
     if (res == successful) {
+        auto start = chrono::system_clock::now();
         auto table = api.select(clause_content["attr"], clause_content["from"], clause_content["where"]);
+        auto end = chrono::system_clock::now();
+        auto duration =
+                std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         if (table.getTupleSize()) {
             if (clause_content["attr"].size() == 1 and clause_content["attr"][0] == "*") {
                 for (int i = 0; i < table.getAttr().num; ++i) {
@@ -306,6 +338,8 @@ void Interpreter::exec_select(std::string &sql) {
                     }
                     std::cout << "|" << std::endl;
                 }
+                std::cout << "minisql > Success in " << duration.count() << " ms with " << table.getTupleSize()
+                          << " rows" << std::endl;
             } else if (!clause_content["attr"].empty()) {
                 for (int i = 0; i < clause_content["attr"].size(); ++i) {
                     std::cout << "| " << clause_content["attr"][i] << " ";
@@ -324,6 +358,8 @@ void Interpreter::exec_select(std::string &sql) {
                     }
                     std::cout << "|" << std::endl;
                 }
+                std::cout << "minisql > Success in " << duration.count() << " ms with " << table.getTupleSize()
+                          << " rows" << std::endl;
             } else {
                 throw e_syntax_error();
             }

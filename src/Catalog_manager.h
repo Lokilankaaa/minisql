@@ -13,6 +13,7 @@
 #include "error.h"
 #include "buffer_manager.h"
 #include <algorithm>
+#include <cstring>
 
 #define CATALOG_FILE_PATH "./database/catalog/cata_file"
 

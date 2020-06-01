@@ -8,6 +8,7 @@
 #include <sstream>
 #include <algorithm>
 #include "buffer_manager.h"
+#include <cstring>
 
 #define TYPE_INT -1
 #define TYPE_FLOAT 0

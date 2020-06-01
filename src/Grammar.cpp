@@ -129,7 +129,7 @@ Error Grammar::check_select(std::string &sql, std::map<std::string, std::vector<
                 return syntax_error;
         } else if (*it == "from") {
             it++;
-            while (*it != "where" and it < split_res.end()) {
+            while (it < split_res.end() and *it != "where") {
                 if (*it == ",") {
                     it++;
                     continue;
@@ -137,14 +137,14 @@ Error Grammar::check_select(std::string &sql, std::map<std::string, std::vector<
                     clause_content["from"].push_back(*it);
                 it++;
             }
-            if (*it == "where")
+            if (it < split_res.end() and *it == "where")
                 continue;
             else
                 return successful;
-        } else if (*it == "where") {
+        } else if (it < split_res.end() and *it == "where") {
             it++;
             while (it < split_res.end()) {
-                if (*it == "and") {
+                if (it < split_res.end() and *it == "and") {
                     it++;
                     continue;
                 }

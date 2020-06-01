@@ -336,7 +336,18 @@ table RecordManager::selectRecord(std::string table_name, std::string target_att
     //如果目标属性不存在，则抛出异常
     if(index == -1) throw e_attribute_not_exist();
     //如果限制的条件对应的数据类型不符
-    if(allAttr.type[index] != target_cons.conData.type) throw e_data_type_conflict();
+    if(allAttr.type[index]>0 && target_cons.conData.type>0){
+        //如果是char*类型
+        if(allAttr.type[index]<target_cons.conData.type){
+            throw e_data_type_conflict();
+        }
+    }
+    else if(allAttr.type[index]==0 && target_cons.conData.type==-1){
+        //如果是int类型
+        target_cons.conData.type = 0;
+        target_cons.conData.float_data = target_cons.conData.int_data;
+    }
+    else if(allAttr.type[index] != target_cons.conData.type) throw e_data_type_conflict();
 
     //接下来构建返回值table
     table res_table(result_table_name, allAttr);
@@ -380,7 +391,7 @@ void RecordManager::insertRecord(std::string table_name, TUPLE& tuple){
             values[i].type = 0;
             values[i].float_data = values[i].int_data;
         }
-        if(values[i].type>0){
+        if(values[i].type>0 && allAttr.type[i] > 0){
             if(values[i].type > values[i].char_data.length())
                 throw e_tuple_type_conflict();
         }
@@ -579,9 +590,21 @@ int RecordManager::deleteRecord(std::string table_name, std::vector<std::string>
         //如果没有找到对应的index则抛出异常
         if(index[i] == -1) throw e_attribute_not_exist();
     }
-    //遍历查看条件和数据是否匹配
+
     for(int i=0; i<target_cons.size(); i++){
-        if(target_cons[i].conData.type != allAttr.type[index[i]]) throw e_data_type_conflict();
+        //如果限制的条件对应的数据类型不符
+        if(allAttr.type[index[i]]>0 && target_cons[i].conData.type>0){
+            //如果是char*类型
+            if(allAttr.type[index[i]]<target_cons[i].conData.type){
+                throw e_data_type_conflict();
+            }
+        }
+        else if(allAttr.type[index[i]]==0 && target_cons[i].conData.type==-1){
+            //如果是int类型
+            target_cons[i].conData.type = 0;
+            target_cons[i].conData.float_data = target_cons[i].conData.int_data;
+        }
+        else if(allAttr.type[index[i]] != target_cons[i].conData.type) throw e_data_type_conflict();
     }
 
     int count = 0;
