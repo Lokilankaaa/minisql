@@ -33,8 +33,10 @@ CONSTRAINT API::check_cons(std::string &str) {
 }
 
 Error API::create_table(std::string &table_name, attributes_set &attrs, Index &index, int pk) {
-    if (catalog_manager::createtable(table_name, attrs, index, pk) == successful)
+    if (catalog_manager::createtable(table_name, attrs, index, pk) == successful) {
         rec_manager.createTableFile(table_name);
+        create_index(attrs.name[attrs.primary_key]+"pk", table_name, attrs.name[attrs.primary_key]);
+    }
     else
         return table_exist;
     return successful;
@@ -70,7 +72,7 @@ Error API::insert_table(std::string &table_name, std::vector<std::string> &value
     return successful;
 }
 
-Error API::create_index(std::string &index_name, std::string &table_name, std::string &column_name) {
+Error API::create_index(std::string index_name, std::string &table_name, std::string &column_name) {
     if (catalog_manager::createindex(table_name, column_name, index_name) == successful) {
         if (!catalog_manager::check_unique(table_name, column_name))
             throw e_index_define_error();
@@ -85,7 +87,7 @@ Error API::create_index(std::string &index_name, std::string &table_name, std::s
             }
         }
         std::string idx_file_path =
-                "INDEX_FILE_" + column_name + "_" + table_name + "_" + index_name + "_" + num2str(type) + ".txt";
+                "INDEX_FILE_" + column_name + "_" + table_name + "_" + index_name + "_" + num2str(type);
         idx_manager.CreateIndex(idx_file_path, type);
         rec_manager.createIndex(idx_manager, table_name, column_name, index_name, type);
         return successful;

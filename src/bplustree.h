@@ -958,9 +958,9 @@ int BPlusTree<T>::GetBlockNum(string table_name)
 template <class T>
 void BPlusTree<T>::ReadFromDiskAll()
 {
-    string fname = "./database/index/" + file_name;
+    string fname = file_name;
     //string fname = file_name;
-    GetFile(fname);
+//    GetFile(fname);
     int block_num = GetBlockNum(fname);
 
     if (block_num <= 0)
@@ -1055,6 +1055,7 @@ void BPlusTree<T>::WrittenBackToDiskAll()
         j++;
     }
 }
+
 
 
 template <class T>

@@ -176,17 +176,19 @@ void Interpreter::exec_create_table(std::string &sql) {
                     attrs.unique[cnt] = true;
                 }
                 cnt++;
-            } else {
-                if (tmp_at.count(name_attr[table_name]) > 0)
-                    tmp_at[table_name] = tmp_at[name_attr[table_name]];
-                else
-                    throw e_invalid_pk();
             }
         }
+        if (tmp_at.count(name_attr[table_name]) > 0)
+            tmp_at[table_name] = tmp_at[name_attr[table_name]];
+        else
+            throw e_invalid_pk();
         pk = tmp_at[table_name];
         change_order(attrs, order, pk);
         Index i;
         auto start = chrono::system_clock::now();
+//        i.num = 1;
+//        i.name[0] = attrs.name[attrs.primary_key]+"pk";
+//        i.location[0] = attrs.primary_key;
         if (api.create_table(table_name, attrs, i, pk) != successful)
             throw e_table_exist();
         else {

@@ -9,10 +9,6 @@
 #include <cstring>
 #include <dirent.h>
 #include "Grammar.h"
-//#include <io.h>
-//#include <windows.h>
-#include <cstdlib>
-#include <fstream>
 #include <sstream>
 
 using namespace std;
@@ -83,17 +79,17 @@ IndexManager::IndexManager(string &table_name) {
             if(type == -1) {
                 auto tree = new BPlusTree<int>(i, GetKeySize(-1), GetDegree(-1));
                 IntMap_Index.insert(int_Map::value_type(tt, tree));
-                tree->ReadFromDiskAll();
+//                tree->ReadFromDiskAll();
             }
             else if(!type) {
                 auto tree1 = new BPlusTree<float>(i, GetKeySize(0), GetDegree(0));
                 FloatMap_Index.insert(float_Map::value_type(tt, tree1));
-                tree1->ReadFromDiskAll();
+//                tree1->ReadFromDiskAll();
             }
             else {
                 auto tree2 = new BPlusTree<string>(i, GetKeySize(type), GetDegree(type));
                 StringMap_Index.insert(string_Map::value_type(tt, tree2));
-                tree2->ReadFromDiskAll();
+//                tree2->ReadFromDiskAll();
             }
         }
     }

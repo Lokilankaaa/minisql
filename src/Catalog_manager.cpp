@@ -54,6 +54,7 @@ Error catalog_manager::createtable(std::string &table_name, attributes_set &attr
         auto page_id = buf_manager.getPageId(CATALOG_FILE_PATH, block_num);
         strcat(buffer, meta_data.c_str());
         buf_manager.modifyPage(page_id);
+        buf_manager.flushPage(page_id, CATALOG_FILE_PATH, block_num);
     }
     return successful;
 }
@@ -232,7 +233,7 @@ int catalog_manager::getIndexType(std::string &index_name, std::string &table_na
     return attrs.type[pos];
 }
 
-bool catalog_manager::check_unique(std::string &table_name, const std::string& attr_name) {
+bool catalog_manager::check_unique(std::string &table_name, const std::string &attr_name) {
     auto attrs = getAllattrs(table_name);
     int pos = 0;
     for (int i = 0; i < attrs.num; ++i) {

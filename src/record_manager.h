@@ -83,7 +83,7 @@ public:
     //异常：如果表不存在，则抛出e_table_not_exist异常;如果对应属性不存在，则抛出e_attribute_not_exist异常
     //输入：(索引管理类对象的引用,表名,属性名)
     //输出：void
-    void createIndex(IndexManager &index_manager, std::string table_name, std::string target_attr, std::string index_name, int type);
+    void createIndex(IndexManager &index_manager, std::string table_name, std::string target_attr, std::string index_name, int theType);
 private:
     //获取该文件一共有多少个block
     int countBlockNum(const std::string& table_name);
@@ -92,7 +92,7 @@ private:
     //获取一个TUPLE的长度(即一条记录的长度)
     int getTupleLength(char* p);
     //带索引查找满足条件的块,结果保存在传入的allBlockId
-    void searchBlockWithIndex(std::string table_name, std::string target_attr, Constraint target_cons, std::vector<int> &allBlockId, std::string index_name);
+    void searchBlockWithIndex(std::string table_name, std::string target_attr, Constraint target_cons, std::vector<int> &allBlockId, std::string index_name, int theType);
     //在相应的块中查询满足条件的记录,结果保存在要输出的表的vector<Tuple>&中
     void searchRecordAccordCons(std::string table_name, int block_id, attributes_set target_attr, int attr_index, Constraint target_cons, std::vector<TUPLE> &result);
     //判断要插入的记录是否和其他记录有冲突

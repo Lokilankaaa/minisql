@@ -19,7 +19,7 @@
 
 //最大页数为100，用于默认构造函数
 #define MAXFRAMESIZE 100
-#define MAXPAGESIZE 4096
+#define MAXPAGESIZE 8192
 
 #include "buffer_manager_page.h"
 #include <string>
@@ -42,6 +42,9 @@ public:
     int unpinPage(int page_id);
     // 获取对应文件的对应块在内存中的页号，没有找到返回-1
     int getPageId(std::string file_name , int block_id);
+    // 将对应内存页写入对应文件的对应块。这里的返回值为0或-1，代表文件是否成功被打开
+    // 但是因为函数内部通过r+打开文件，这是总能成功的，因此返回值无太大意义
+    int flushPage(int page_id , std::string file_name , int block_id);
 private:
     buffer_manager_page* Frames;    //缓冲池，是一个Page的数组，通过堆分配内存空间，更加灵活
     int frame_size_;                //记录总共的页数
@@ -52,9 +55,7 @@ private:
     int getEmptyPageId();
     //将对应文件的对应块载入对应的内存页，文件不存在返回-1，否则返回1
     int loadDiskBlock(int page_id , std::string file_name , int block_id);
-    // 将对应内存页写入对应文件的对应块。这里的返回值为0或-1，代表文件是否成功被打开
-    // 但是因为函数内部通过r+打开文件，这是总能成功的，因此返回值无太大意义
-    int flushPage(int page_id , std::string file_name , int block_id);
+
 };
 
 

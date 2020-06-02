@@ -32,7 +32,7 @@ protected:
 public:
     Error create_table(std::string &table_name, attributes_set &attrs, Index &index, int pk);
 
-    Error create_index(std::string &index_name, std::string &table_name, std::string &column_name);
+    Error create_index(std::string index_name, std::string &table_name, std::string &column_name);
 
     Error drop_table(std::string &table_name);
 
