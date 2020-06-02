@@ -83,7 +83,7 @@ public:
     //异常：如果表不存在，则抛出e_table_not_exist异常;如果对应属性不存在，则抛出e_attribute_not_exist异常
     //输入：(索引管理类对象的引用,表名,属性名)
     //输出：void
-    void createIndex(IndexManager &index_manager, std::string table_name, std::string target_attr, std::string index_name);
+    void createIndex(IndexManager &index_manager, std::string table_name, std::string target_attr, std::string index_name, int type);
 private:
     //获取该文件一共有多少个block
     int countBlockNum(const std::string& table_name);

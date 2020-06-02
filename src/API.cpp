@@ -87,7 +87,7 @@ Error API::create_index(std::string &index_name, std::string &table_name, std::s
         std::string idx_file_path =
                 "INDEX_FILE_" + column_name + "_" + table_name + "_" + index_name + "_" + num2str(type) + ".txt";
         idx_manager.CreateIndex(idx_file_path, type);
-        rec_manager.createIndex(idx_manager, table_name, column_name, index_name);
+        rec_manager.createIndex(idx_manager, table_name, column_name, index_name, type);
         return successful;
     } else {
         throw e_attribute_not_exist();
