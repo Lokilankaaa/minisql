@@ -75,6 +75,7 @@ Error API::create_index(std::string &index_name, std::string &table_name, std::s
         if (!catalog_manager::check_unique(table_name, column_name))
             throw e_index_define_error();
         IndexManager idx_manager(table_name);
+
         int type;
         auto attrs = catalog_manager::getAllattrs(table_name);
         for (int i = 0; i < attrs.num; ++i) {
@@ -83,7 +84,8 @@ Error API::create_index(std::string &index_name, std::string &table_name, std::s
                 break;
             }
         }
-        std::string idx_file_path = "INDEX_FILE_" + column_name + "_" + table_name + "_" + index_name + num2str(type) + ".txt";
+        std::string idx_file_path =
+                "INDEX_FILE_" + column_name + "_" + table_name + "_" + index_name + "_" + num2str(type) + ".txt";
         idx_manager.CreateIndex(idx_file_path, type);
         rec_manager.createIndex(idx_manager, table_name, column_name, index_name);
         return successful;
@@ -93,9 +95,9 @@ Error API::create_index(std::string &index_name, std::string &table_name, std::s
 }
 
 Error API::drop_index(std::string &index_name) {
-    IndexManager idx_manager_("tmp");
-    auto file_path = idx_manager_.FindTableName(index_name);
-    auto table_name = split(file_path, '_')[split(file_path, '_').size()-2];
+    auto file_path = IndexManager::FindTableName(index_name);
+    auto tmp = split(file_path, '/').back();
+    auto table_name = split(tmp, '_')[split(tmp, '_').size() - 3];
     auto type = catalog_manager::getIndexType(index_name, table_name);
     file_path = split(file_path, '/').back();
     catalog_manager::dropindex(table_name, index_name);

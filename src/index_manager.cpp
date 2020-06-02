@@ -9,16 +9,99 @@
 #include <cstring>
 #include <dirent.h>
 #include "Grammar.h"
+//#include <io.h>
+//#include <windows.h>
+#include <cstdlib>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
-IndexManager::IndexManager(string table_name) {
-    catalog_manager catalog;
-    attributes_set attr = catalog_manager::getAllattrs(table_name);
+void listDir(char *path, std::vector<std::string> *files) {
+    DIR *directory_pointer;
+    struct dirent *entry;
+    char childpath[512];  //定义一个字符数组，用来存放读取的路径
+    char filepath[512];  //定义一个字符数组，用来存放读取的路径
+    directory_pointer = opendir(path);
+    memset(childpath, 0, sizeof(childpath)); //将字符数组childpath的数组元素全部置零
+    while ((entry = readdir(directory_pointer)) != NULL)  //读取pDir打开的目录，并赋值给ent, 同时判断是否目录为空，不为空则执行循环体
+    {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+            continue;
+        if (entry->d_type != DT_REG) {
+            throw e_unknown_file_path();
+        }
+        sprintf(filepath, "%s/%s", path, entry->d_name);
+        files->push_back(filepath);
+    }
+}
+
+IndexManager::IndexManager(string &table_name) {
+
+//    std::string inPath = "./database/index/*.txt";//遍历文件夹下的所有.jpg文件
+//    //用于查找的句柄
+//    char filename[512];
+//    long handle;
+//    vector<string> files;
+//    struct _finddata_t fileinfo;
+//    //第一次查找
+//    handle = _findfirst(inPath.c_str(), &fileinfo);
+//    if (handle == -1) {
+//        return;
+//    }
+    string file_path = "./database/index";
+    string filename;
+    char *path = const_cast<char *>(file_path.c_str());
+    vector<string> files;
+
+    listDir(path, &files);
+//    if (files.empty())
+//        return;
+//    auto pos = files.begin();
+//    while (pos != files.end()) {
+//        if (split(*pos, '_')[split(*pos, '_').size() -3] == table_name){
+//
+//        }
+//
+//        else
+//            pos++;
+//    }
+
+//    do {
+//        //找到的文件的文件名
+//        sprintf(filename, "%s/%s", inPath.c_str(), fileinfo.name);
+//        files.push_back(split(filename, '/').back());
+//    } while (!_findnext(handle, &fileinfo));
+//    _findclose(handle);
+    for (auto &i:files) {
+        auto tmp = split(i, '_')[split(i, '_').size()-3];
+        if (tmp ==table_name) {
+            auto x = split(i, '_').back();
+            auto y = x.substr(0, x.size()-4);
+            int type = str2num<int>(y);
+            auto tt = split(i, '/').back();
+            if(type == -1) {
+                auto tree = new BPlusTree<int>(i, GetKeySize(-1), GetDegree(-1));
+                IntMap_Index.insert(int_Map::value_type(tt, tree));
+                tree->ReadFromDiskAll();
+            }
+            else if(!type) {
+                auto tree1 = new BPlusTree<float>(i, GetKeySize(0), GetDegree(0));
+                FloatMap_Index.insert(float_Map::value_type(tt, tree1));
+                tree1->ReadFromDiskAll();
+            }
+            else {
+                auto tree2 = new BPlusTree<string>(i, GetKeySize(type), GetDegree(type));
+                StringMap_Index.insert(string_Map::value_type(tt, tree2));
+                tree2->ReadFromDiskAll();
+            }
+        }
+    }
 
     //for (int i = 0; i < attr.num; i++)
     //    if (attr.unique[i])
     //        CreateIndex("INDEX_FILE_" + attr.name[i] + "_" + table_name, attr.type[i]);
+
 }
 
 IndexManager::~IndexManager() {
@@ -85,6 +168,7 @@ void IndexManager::CreateIndex(const string &file_path, int keytype) {
 //删除索引、B+树及文件
 void IndexManager::DropIndex(const string &file_path, int keytype) {
     //根据不同数据类型采用对应的处理方式
+    auto path = "./database/index/" + file_path;
     if (keytype == TYPE_INT) {
         //查找路径对应的键值对
         auto itInt = IntMap_Index.find(file_path);
@@ -96,6 +180,7 @@ void IndexManager::DropIndex(const string &file_path, int keytype) {
             delete itInt->second;
             //清空该键值对
             IntMap_Index.erase(itInt);
+            remove(path.c_str());
         }
     } else if (keytype == TYPE_FLOAT) { //同上
         auto itFloat = FloatMap_Index.find(file_path);
@@ -105,6 +190,7 @@ void IndexManager::DropIndex(const string &file_path, int keytype) {
         } else {
             delete itFloat->second;
             FloatMap_Index.erase(itFloat);
+            remove(path.c_str());
         }
     } else {
         auto itString = StringMap_Index.find(file_path);
@@ -114,8 +200,10 @@ void IndexManager::DropIndex(const string &file_path, int keytype) {
         } else {
             delete itString->second;
             StringMap_Index.erase(itString);
+            remove(path.c_str());
         }
     }
+
 }
 
 //寻找索引位置
@@ -153,25 +241,13 @@ void IndexManager::InsertIndex(string file_path, data Data, int block_id) {
 
     if (Data.type == TYPE_INT) {
         auto itInt = IntMap_Index.find(file_path);
-        if (itInt == IntMap_Index.end()) {
-            throw e_index_full();
-            return;
-        } else
-            itInt->second->InsertKey(Data.int_data, block_id);
+        itInt->second->InsertKey(Data.int_data, block_id);
     } else if (Data.type == TYPE_FLOAT) {
         auto itFloat = FloatMap_Index.find(file_path);
-        if (itFloat == FloatMap_Index.end()) {
-            throw e_index_full();
-            return;
-        } else
-            itFloat->second->InsertKey(Data.float_data, block_id);
+        itFloat->second->InsertKey(Data.float_data, block_id);
     } else {
         auto itString = StringMap_Index.find(file_path);
-        if (itString == StringMap_Index.end()) {
-            throw e_index_full();
-            return;
-        } else
-            itString->second->InsertKey(Data.char_data, block_id);
+        itString->second->InsertKey(Data.char_data, block_id);
     }
 }
 
@@ -240,28 +316,53 @@ void IndexManager::SearchRange(const string &file_path, data Data1, data Data2, 
     }
 }
 
+//string IndexManager::FindTableName(const string& index_name) {
+//    system("dir ./index >> a.txt");
+//    fstream  f("a.txt");
+//    std::vector<std::string> tmp;
+//    std::string tt;
+//    while (getline(f, tt)) {
+//        tmp.push_back(split(tt, ' ').back());
+//    }
+//
+//}
 
-void listDir(char *path, std::vector<std::string> *files) {
-    DIR *directory_pointer;
-    struct dirent *entry;
-    char childpath[512];  //定义一个字符数组，用来存放读取的路径
-    char filepath[512];  //定义一个字符数组，用来存放读取的路径
-    directory_pointer = opendir(path);
-    memset(childpath, 0, sizeof(childpath)); //将字符数组childpath的数组元素全部置零
-    while ((entry = readdir(directory_pointer)) != NULL)  //读取pDir打开的目录，并赋值给ent, 同时判断是否目录为空，不为空则执行循环体
-    {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
-            continue;
-        if (entry->d_type != DT_REG) {
-            throw e_unknown_file_path();
-        }
-        sprintf(filepath, "%s/%s", path, entry->d_name);
-        files->push_back(filepath);
-    }
-}
+//
+//string IndexManager::FindTableName(const string &index_name) {
+//    //目标文件夹路径
+//    std::string inPath = "./database/index/*.txt";//遍历文件夹下的所有.jpg文件
+//    //用于查找的句柄
+//    char filename[512];
+//    long handle;
+//    vector<string> files;
+//    struct _finddata_t fileinfo;
+//    //第一次查找
+//    handle = _findfirst(inPath.c_str(), &fileinfo);
+//    if (handle == -1) {
+//        throw e_unknown_file_path();
+//        exit(0);
+//    }
+//
+//    do {
+//        //找到的文件的文件名
+//        sprintf(filename, "%s/%s", inPath.substr(0,inPath.size()-6).c_str(), fileinfo.name);
+//        files.push_back(filename);
+//    } while (!_findnext(handle, &fileinfo));
+//    _findclose(handle);
+//
+//    auto pos = files.begin();
+//
+//    while (pos != files.end()) {
+//        if (split(*pos, '_')[split(*pos, '_').size() -2] == index_name)
+//            return *pos;
+//        else
+//            pos++;
+//    }
+//    throw e_index_not_exist();
+//}
 
 string IndexManager::FindTableName(const string &index_name) {
-    string file_path = "./database/index/";
+    string file_path = "./database/index";
     string filename;
     char *path = const_cast<char *>(file_path.c_str());
     vector<string> files;
@@ -269,7 +370,7 @@ string IndexManager::FindTableName(const string &index_name) {
     listDir(path, &files);
     auto pos = files.begin();
     while (pos != files.end()) {
-        if (split(*pos, '_').back() == index_name)
+        if (split(*pos, '_')[split(*pos, '_').size() -2] == index_name)
             return *pos;
         else
             pos++;

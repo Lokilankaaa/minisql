@@ -546,7 +546,7 @@ int RecordManager::deleteRecord(std::string table_name){
 //输入：(索引管理类对象的引用,表名,属性名)
 //输出：void
 void RecordManager::createIndex(IndexManager &index_manager, std::string table_name, std::string target_attr, std::string index_name){
-    std::string temp_path = DATA_FILE_PATH + table_name;
+    std::string temp_path = DATA_FILE_PATH + table_name + index_name;
     catalog_manager cate;
     attributes_set allAttr = cate.getAllattrs(table_name);
     //用于标记目标属性的下标

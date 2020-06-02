@@ -12,7 +12,7 @@
 using namespace std;
 class IndexManager {
 public:
-    explicit IndexManager(string table_name);
+    explicit IndexManager(string &table_name);
     ~IndexManager();
     //创建索引文件及B + 树
     void CreateIndex(const string& file_path, int keytype);
@@ -28,7 +28,7 @@ public:
     void SearchRange(const string& file_path, data Data1, data Data2, vector<int>& vals);
     //输入index返回对应表的名称
     //返回的是文件名，表名在文件名中
-    string FindTableName(const string& index_name);
+    static string FindTableName(const string& index_name);
 
 private:
     typedef map<string, BPlusTree<int>*> int_Map;
