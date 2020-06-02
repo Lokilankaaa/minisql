@@ -75,7 +75,6 @@ Error API::create_index(std::string &index_name, std::string &table_name, std::s
         if (!catalog_manager::check_unique(table_name, column_name))
             throw e_index_define_error();
         IndexManager idx_manager(table_name);
-        std::string idx_file_path = "INDEX_FILE_" + column_name + "_" + table_name + "_" + index_name;
         int type;
         auto attrs = catalog_manager::getAllattrs(table_name);
         for (int i = 0; i < attrs.num; ++i) {
@@ -84,8 +83,9 @@ Error API::create_index(std::string &index_name, std::string &table_name, std::s
                 break;
             }
         }
+        std::string idx_file_path = "INDEX_FILE_" + column_name + "_" + table_name + "_" + index_name + num2str(type) + ".txt";
         idx_manager.CreateIndex(idx_file_path, type);
-        rec_manager.createIndex(idx_manager, table_name, column_name);
+        rec_manager.createIndex(idx_manager, table_name, column_name, index_name);
         return successful;
     } else {
         throw e_attribute_not_exist();

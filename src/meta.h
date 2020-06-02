@@ -35,7 +35,6 @@ struct attributes_set {
     int type[32]; // type of each attribute
     bool unique[32]{false}; // whether it's unique
     int primary_key; // -1 means no primary key, other means the position of key
-    bool hasIndex[32]{false};   //lfy add: judge whether has index
 };
 
 class TUPLE {
