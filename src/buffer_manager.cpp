@@ -10,7 +10,6 @@ BufferManager::BufferManager(int frame_size) {
 }
 
 
-
 //实际的初始化函数，根据传入的参数决定缓冲池的大小
 void BufferManager::initialize(int frame_size) {
     Frames = new buffer_manager_page[frame_size];
@@ -96,8 +95,8 @@ int BufferManager::getEmptyPageId(){
         if(Frames[current_position_].getRefBit()== true){
             Frames[current_position_].setRefBit(false);
         }
-        //否则如果改页的allPinNum为0，代表改页没有被锁住，因此可以删除以腾出缓冲池空间
-        else if(Frames[current_position_].getAllPinNum()==0){
+            //否则如果改页的allPinNum为0，代表改页没有被锁住，因此可以删除以腾出缓冲池空间
+        else if(Frames[current_position_].getAllPinNum()<=0){
             //查看改页有没有被修改，如果被修改则需要将其写回磁盘后才能进行删除
             if(Frames[current_position_].getModify() == true){
                 std::string file_name =  Frames[current_position_].getFileName();
@@ -130,7 +129,7 @@ int BufferManager::loadDiskBlock(int page_id , std::string file_name , int block
     fread(emptyBuffer, PAGESIZE, 1, f);
     fclose(f);
     //对该页进行的相关数据进行设置
-    Frames[page_id].setAllData(file_name,block_id,1, false, false, true);
+    Frames[page_id].setAllData(file_name,block_id,0, false, false, true);
     //如果成功返回1;
     return 1;
 }
@@ -154,9 +153,7 @@ int BufferManager::unpinPage(int page_id){
     int tempPinNum = Frames[page_id].getAllPinNum();
     if(tempPinNum <= 0) return -1;
     else{
-        Frames[page_id].setAllPinNum(tempPinNum+1);
+        Frames[page_id].setAllPinNum(tempPinNum-1);
         return 0;
     }
 }
-
-

@@ -46,7 +46,7 @@ public:
 
     static int getIndexType(std::string &index_name, std::string &table_name);
 
-    static bool check_unique(std::string &table_name, std::string attr_name);
+    static bool check_unique(std::string &table_name, const std::string& attr_name);
 };
 
 #endif //MINISQL_CATALOG_MANAGER_H

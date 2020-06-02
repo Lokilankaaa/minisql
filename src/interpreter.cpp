@@ -31,7 +31,7 @@ void Interpreter::normalize(std::string &one_sql) {
             if (one_sql[i + 1] != ' ')
                 one_sql.insert(++i, " ");
         }
-        if (one_sql[i] == '\t' or one_sql[i] == '\n')
+        if (one_sql[i] == '\t' or one_sql[i] == '\n' or one_sql[i] == '\r')
             one_sql[i] = ' ';
     }
 
@@ -132,6 +132,10 @@ void Interpreter::execute() {
         std::cout << "minisql > ERROR! The data type is not compatible with the table." << std::endl;
     }
 
+    catch (const e_invalid_pk &e) {
+        std::cout << "minisql > ERROR! PK undefined." << std::endl;
+    }
+
     catch (const e_unique_conflict &e) {
         std::cout << "minisql > ERROR! The same unique data has been inserted." << std::endl;
     }
@@ -173,7 +177,10 @@ void Interpreter::exec_create_table(std::string &sql) {
                 }
                 cnt++;
             } else {
-                tmp_at[table_name] = tmp_at[name_attr[table_name]];
+                if (tmp_at.count(name_attr[table_name]) > 0)
+                    tmp_at[table_name] = tmp_at[name_attr[table_name]];
+                else
+                    throw e_invalid_pk();
             }
         }
         pk = tmp_at[table_name];

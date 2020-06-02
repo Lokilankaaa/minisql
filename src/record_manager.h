@@ -86,7 +86,7 @@ public:
     void createIndex(IndexManager &index_manager, std::string table_name, std::string target_attr);
 private:
     //获取该文件一共有多少个block
-    int countBlockNum(std::string table_name);
+    int countBlockNum(const std::string& table_name);
     //从传入指针的内存位置读取一个TUPLE(即一条记录的数据信息)
     TUPLE readOneTuple(const char* p, attributes_set attr);
     //获取一个TUPLE的长度(即一条记录的长度)

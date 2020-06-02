@@ -6,7 +6,7 @@
 
 
 //获取该文件一共有多少个block
-int RecordManager::countBlockNum(std::string table_name){
+int RecordManager::countBlockNum(const std::string &table_name){
     char *p;
     int count = -1;
     while(true){
@@ -68,7 +68,7 @@ int RecordManager::getTupleLength(char* p){
 void RecordManager::searchBlockWithIndex(std::string table_name, std::string target_attr, Constraint target_cons, std::vector<int> &allBlockId){
     IndexManager im(table_name);
     data temp_data;
-    std::string temp_path = "INDEX_FILE"+target_attr+"_"+table_name;
+    std::string temp_path = "INDEX_FILE_"+target_attr+"_"+table_name;
     if(target_cons.conSymbol==MORE || target_cons.conSymbol==MORE_OR_EQUAL){
         if(target_cons.conData.type==-1){
             temp_data.type = -1;
@@ -237,7 +237,7 @@ int RecordManager::deleteRecordAccordCons(std::string table_name, int block_id, 
                 }
             }
         }
-        if(judge==true){
+        if(judge==true&&*(p+getTupleLength(p)-2)=='0'){
             //代表满足条件
             p = deleteOneRecord(p);
             count++;
@@ -347,6 +347,17 @@ table RecordManager::selectRecord(std::string table_name, std::string target_att
         target_cons.conData.type = 0;
         target_cons.conData.float_data = target_cons.conData.int_data;
     }
+    else if(allAttr.type[index]==-1 && target_cons.conData.type==0){
+        //如果条件是float类型
+        if(target_cons.conSymbol==EQUAL || target_cons.conSymbol==NOT_EQUAL){
+            //==和!=排除在外
+            throw e_data_type_conflict();
+        }
+        else{
+            target_cons.conData.type = -1;
+            target_cons.conData.float_data = target_cons.conData.int_data;
+        }
+    }
     else if(allAttr.type[index] != target_cons.conData.type) throw e_data_type_conflict();
 
     //接下来构建返回值table
@@ -380,6 +391,8 @@ table RecordManager::selectRecord(std::string table_name, std::string target_att
 //输入：(表名,要插入的记录TUPLE)
 //输出：void
 void RecordManager::insertRecord(std::string table_name, TUPLE& tuple){
+    static int allcount = 0;
+    std::cout<<allcount++;
     std::string temp_path = DATA_FILE_PATH + table_name;
     catalog_manager cate;
     attributes_set allAttr = cate.getAllattrs(table_name);
@@ -543,7 +556,7 @@ void RecordManager::createIndex(IndexManager &index_manager, std::string table_n
     int count_block = countBlockNum(temp_path);
     if(count_block <= 0) count_block=1;
     //获取对应表的索引文件
-    std::string indexFilePath = "INDEX_FILE"+target_attr+"_"+table_name;
+    std::string indexFilePath = "INDEX_FILE_"+target_attr+"_"+table_name;
     for(int i=0; i<count_block; i++){
         char *p = buf_manager.getPage(temp_path, i);
         char *temp = p;

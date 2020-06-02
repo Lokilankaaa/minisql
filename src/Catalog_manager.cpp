@@ -232,7 +232,7 @@ int catalog_manager::getIndexType(std::string &index_name, std::string &table_na
     return attrs.type[pos];
 }
 
-bool catalog_manager::check_unique(std::string &table_name, std::string attr_name) {
+bool catalog_manager::check_unique(std::string &table_name, const std::string& attr_name) {
     auto attrs = getAllattrs(table_name);
     int pos = 0;
     for (int i = 0; i < attrs.num; ++i) {
