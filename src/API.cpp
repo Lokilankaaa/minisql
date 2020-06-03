@@ -103,8 +103,8 @@ Error API::drop_index(std::string &index_name) {
     auto type = catalog_manager::getIndexType(index_name, table_name);
     file_path = split(file_path, '/').back();
     catalog_manager::dropindex(table_name, index_name);
-    IndexManager idx_manager(table_name);
-    idx_manager.DropIndex(file_path, type);
+//    IndexManager idx_manager(table_name);
+    IndexManager::DropIndex(file_path, type);
     return successful;
 }
 
@@ -169,7 +169,7 @@ table API::select(std::vector<std::string> &attrs, std::vector<std::string> &tab
                 } else if (!tmp_data.type) {
                     tmp_data.float_data = str2num<float>(res[2]);
                 } else {
-                    tmp_data.char_data = res[2];
+                    tmp_data.char_data = res[2].substr(1, res[2].size()-2);
                 }
                 tmp_con.conData = tmp_data, tmp_con.conSymbol = check_cons(res[1]);
                 auto t = rec_manager.selectRecord(tables[0], res[0], tmp_con);

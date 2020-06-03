@@ -70,23 +70,21 @@ IndexManager::IndexManager(string &table_name) {
 //    } while (!_findnext(handle, &fileinfo));
 //    _findclose(handle);
     for (auto &i:files) {
-        auto tmp = split(i, '_')[split(i, '_').size()-3];
-        if (tmp ==table_name) {
+        auto tmp = split(i, '_')[split(i, '_').size() - 3];
+        if (tmp == table_name) {
             auto x = split(i, '_').back();
-            auto y = x.substr(0, x.size()-4);
+            auto y = x.substr(0, x.size() - 4);
             int type = str2num<int>(y);
             auto tt = split(i, '/').back();
-            if(type == -1) {
+            if (type == -1) {
                 auto tree = new BPlusTree<int>(i, GetKeySize(-1), GetDegree(-1));
                 IntMap_Index.insert(int_Map::value_type(tt, tree));
 //                tree->ReadFromDiskAll();
-            }
-            else if(!type) {
+            } else if (!type) {
                 auto tree1 = new BPlusTree<float>(i, GetKeySize(0), GetDegree(0));
                 FloatMap_Index.insert(float_Map::value_type(tt, tree1));
 //                tree1->ReadFromDiskAll();
-            }
-            else {
+            } else {
                 auto tree2 = new BPlusTree<string>(i, GetKeySize(type), GetDegree(type));
                 StringMap_Index.insert(string_Map::value_type(tt, tree2));
 //                tree2->ReadFromDiskAll();
@@ -164,40 +162,52 @@ void IndexManager::CreateIndex(const string &file_path, int keytype) {
 //删除索引、B+树及文件
 void IndexManager::DropIndex(const string &file_path, int keytype) {
     //根据不同数据类型采用对应的处理方式
+//    auto path = "./database/index/" + file_path;
+//    if (keytype == TYPE_INT) {
+//        //查找路径对应的键值对
+//        auto itInt = IntMap_Index.find(file_path);
+//        if (itInt == IntMap_Index.end()) { //未找到
+//            throw e_index_not_exist();
+//            return;
+//        } else {
+//            //删除对应的B+树
+//            delete itInt->second;
+//            //清空该键值对
+//            IntMap_Index.erase(itInt);
+//            remove(path.c_str());
+//        }
+//    } else if (keytype == TYPE_FLOAT) { //同上
+//        auto itFloat = FloatMap_Index.find(file_path);
+//        if (itFloat == FloatMap_Index.end()) {
+//            throw e_index_not_exist();
+//            return;
+//        } else {
+//            delete itFloat->second;
+//            FloatMap_Index.erase(itFloat);
+//            remove(path.c_str());
+//        }
+//    } else {
+//        auto itString = StringMap_Index.find(file_path);
+//        if (itString == StringMap_Index.end()) { //同上
+//            throw e_index_not_exist();
+//            return;
+//        } else {
+//            delete itString->second;
+//            StringMap_Index.erase(itString);
+//            remove(path.c_str());
+//        }
+//    }
+
     auto path = "./database/index/" + file_path;
     if (keytype == TYPE_INT) {
-        //查找路径对应的键值对
-        auto itInt = IntMap_Index.find(file_path);
-        if (itInt == IntMap_Index.end()) { //未找到
-            throw e_index_not_exist();
-            return;
-        } else {
-            //删除对应的B+树
-            delete itInt->second;
-            //清空该键值对
-            IntMap_Index.erase(itInt);
-            remove(path.c_str());
-        }
+        remove(path.c_str());
+
     } else if (keytype == TYPE_FLOAT) { //同上
-        auto itFloat = FloatMap_Index.find(file_path);
-        if (itFloat == FloatMap_Index.end()) {
-            throw e_index_not_exist();
-            return;
-        } else {
-            delete itFloat->second;
-            FloatMap_Index.erase(itFloat);
-            remove(path.c_str());
-        }
+        remove(path.c_str());
+
     } else {
-        auto itString = StringMap_Index.find(file_path);
-        if (itString == StringMap_Index.end()) { //同上
-            throw e_index_not_exist();
-            return;
-        } else {
-            delete itString->second;
-            StringMap_Index.erase(itString);
-            remove(path.c_str());
-        }
+        remove(path.c_str());
+
     }
 
 }
@@ -366,7 +376,7 @@ string IndexManager::FindTableName(const string &index_name) {
     listDir(path, &files);
     auto pos = files.begin();
     while (pos != files.end()) {
-        if (split(*pos, '_')[split(*pos, '_').size() -2] == index_name)
+        if (split(*pos, '_')[split(*pos, '_').size() - 2] == index_name)
             return *pos;
         else
             pos++;

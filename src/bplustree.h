@@ -939,7 +939,7 @@ void BPlusTree<T>::SearchRange(T& key1, T& key2, vector<int>& vals, int flag)
 template <class T>
 void BPlusTree<T>::GetFile(string fname)
 {
-    FILE* fp = fopen(fname.c_str(), "w+");
+    FILE* fp = fopen(fname.c_str(), "w");
     fclose(fp);
 }
 
@@ -1026,8 +1026,10 @@ void BPlusTree<T>::WrittenBackToDiskAll()
         char* p = buf_manager.getPage(fname, j);
         offset = 0;
         memset(p, 0, PAGESIZE);
-
+        int rec_i;
+        int flag;
         for (i = 0; i < ntmp->key_num; i++) {
+
             p[offset++] = '#';
             p[offset++] = ' ';
 

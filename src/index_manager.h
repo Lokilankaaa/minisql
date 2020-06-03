@@ -17,7 +17,7 @@ public:
     //创建索引文件及B + 树
     void CreateIndex(const string& file_path, int keytype);
     //删除索引、B+树及文件
-    void DropIndex(const string& file_path, int keytype);
+    static void DropIndex(const string& file_path, int keytype);
     //寻找索引位置
     int FindIndex(const string& file_path, data Data);
     //在指定索引中插入一个key
