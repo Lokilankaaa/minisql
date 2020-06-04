@@ -205,7 +205,7 @@ char* RecordManager::deleteOneRecord(char *p){
 }
 
 
-int RecordManager::deleteRecordAccordCons(std::string table_name, int block_id, attributes_set target_attr, std::vector<int> attr_index, std::vector<Constraint> target_cons){
+int RecordManager::deleteRecordAccordCons(std::string table_name, int block_id, attributes_set target_attr, std::vector<int> attr_index, std::vector<Constraint> target_cons, std::vector<int> &indexindex, Index &allIndex, IndexManager &im){
     std::string temp_path = DATA_FILE_PATH + table_name;
     char *p = buf_manager.getPage(temp_path, block_id);
     char *temp = p;
@@ -239,6 +239,15 @@ int RecordManager::deleteRecordAccordCons(std::string table_name, int block_id, 
         }
         if(judge==true&&*(p+getTupleLength(p)-2)=='0'){
             //代表满足条件
+            //删除对应的索引
+            std::vector<data> allTempData = tuple.getData();
+            for(int ii=0; ii<indexindex.size(); ii++){
+                std::string theName = target_attr.name[allIndex.location[indexindex[ii]]];
+                std::string theIndexName = allIndex.name[indexindex[ii]];
+                int theType = target_attr.type[allIndex.location[indexindex[ii]]];
+                std::string thePath = "INDEX_FILE_"+theName+"_"+table_name+"_"+theIndexName+"_"+num2str(theType);
+                im.DeleteIndexByKey(thePath, allTempData[allIndex.location[indexindex[ii]]]);
+            }
             p = deleteOneRecord(p);
             count++;
         } else{
@@ -410,7 +419,7 @@ void RecordManager::insertRecord(std::string table_name, TUPLE& tuple){
             values[i].float_data = values[i].int_data;
         }
         if(values[i].type>0 && allAttr.type[i] > 0){
-            if(values[i].type > values[i].char_data.length())
+            if(values[i].type > allAttr.type[i])
                 throw e_tuple_type_conflict();
         }
         else if(values[i].type != allAttr.type[i])
@@ -431,15 +440,6 @@ void RecordManager::insertRecord(std::string table_name, TUPLE& tuple){
             }
         }
     }
-    //检查长度是否符合要求
-//    std::vector<data> checkData = tuple.getData();
-//    for(int i=0; i<values.size(); i++){
-//        if(values[i].type > 0){
-//            //代表是char类型
-//            if(values[i].type < checkData[i].char_data.length())
-//                throw e_tuple_type_conflict();
-//        }
-//    }
 
     //接下来处理数据的插入
     int count_block = countBlockNum(temp_path);
@@ -530,8 +530,10 @@ int RecordManager::deleteRecord(std::string table_name){
                 }
             }
             //将该条记录删除
-            p = deleteOneRecord(p);
-            count++;
+            if(*(p+getTupleLength(p)-2)=='0'){
+                p = deleteOneRecord(p);
+                count++;
+            }
         }
         //标记修改了buffer
         int page_id = buf_manager.getPageId(temp_path, i);
@@ -566,6 +568,11 @@ void RecordManager::createIndex(IndexManager &index_manager, std::string table_n
     if(count_block <= 0) count_block=1;
     //获取对应表的索引文件
     std::string indexFilePath = "INDEX_FILE_"+target_attr+"_"+table_name+"_"+index_name+"_"+num2str(theType);
+    std::string indexAllPath = "./database/index/"+indexFilePath;
+    if(fopen(indexAllPath.c_str(), "r")==nullptr){
+        FILE *f=fopen(indexAllPath.c_str(), "w");
+        fclose(f);
+    }
     for(int i=0; i<count_block; i++){
         char *p = buf_manager.getPage(temp_path, i);
         char *temp = p;
@@ -591,7 +598,7 @@ int RecordManager::deleteRecord(std::string table_name, std::vector<std::string>
     catalog_manager cate;
     attributes_set allAttr = cate.getAllattrs(table_name);
     Index allIndex = cate.getAllindex(table_name);
-
+    IndexManager im(table_name);
     //构建表示目标属性下标和是否有索引的vector容器
     std::vector<int> index;
     std::vector<int> indexindex;
@@ -635,20 +642,24 @@ int RecordManager::deleteRecord(std::string table_name, std::vector<std::string>
     int count = 0;
     if(judge==true){
         //如果某一项存在索引而且该项的条件不是NOT_EQUAL
-        std::set<int> final;
+        std::vector<int> finalAll;
         for(int i=0; i<indexindex.size(); i++){
             //找出每一个条件所满足的block
             if(indexindex[i]!=-1 && target_cons[i].conSymbol != NOT_EQUAL){
+                std::vector<int> tempFinal;
                 std::vector<int> block_ids;
                 searchBlockWithIndex(table_name, target_attr[i], target_cons[i], block_ids, allIndex.name[indexindex[i]], allAttr.type[allIndex.location[indexindex[i]]]);
-                for(int j=0; j<block_ids.size(); j++){
-                    //插入到set当中
-                    final.insert(block_ids[i]);
+                std::sort(finalAll.begin(), finalAll.end());
+                std::sort(block_ids.begin(), block_ids.end());
+                std::set_intersection(finalAll.begin(),finalAll.end(),block_ids.begin(),block_ids.end(), std::back_inserter(tempFinal));
+                vector <int>().swap(finalAll);
+                for(auto ti=tempFinal.begin(); ti!=tempFinal.end(); ti++){
+                    finalAll.push_back(*ti);
                 }
             }
         }
-        for(auto i=final.begin(); i!=final.end(); i++){
-            count += deleteRecordAccordCons(table_name, *i, allAttr, index, target_cons);
+        for(auto i=finalAll.begin(); i!=finalAll.end(); i++){
+            count += deleteRecordAccordCons(table_name, *i, allAttr, index, target_cons, indexindex, allIndex, im);
         }
     }
     else{
@@ -656,7 +667,7 @@ int RecordManager::deleteRecord(std::string table_name, std::vector<std::string>
         int block_num = countBlockNum(temp_path);
         if(block_num==0) return 0;
         for(int i=0; i<block_num; i++){
-            count += deleteRecordAccordCons(table_name, i, allAttr, index, target_cons);
+            count += deleteRecordAccordCons(table_name, i, allAttr, index, target_cons, indexindex, allIndex, im);
         }
     }
     return count;

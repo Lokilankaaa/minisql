@@ -44,6 +44,7 @@ bool satisfyWithCondition(T first, T second, Constraint rel){
     else if(rel.conSymbol==NOT_EQUAL){
         return first != second;
     }
+    return false;
 }
 
 

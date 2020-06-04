@@ -28,6 +28,7 @@
 #include <climits>
 #include <cstdio>
 #include <set>
+#include <algorithm>
 #include "meta.h"
 #include "index_manager.h"          //索引管理，根据整合后实际情况引用
 #include "Catalog_manager.h"
@@ -100,7 +101,7 @@ private:
     //insertRecord调用的函数，表示在该位置插入一条记录
     void insertOneRecord(char *p, int offset, int len, const std::vector<data> &record_values);
     //根据条件的集合删除元素
-    int deleteRecordAccordCons(std::string table_name, int block_id, attributes_set target_attr, std::vector<int> attr_index, std::vector<Constraint> target_cons);
+    int deleteRecordAccordCons(std::string table_name, int block_id, attributes_set target_attr, std::vector<int> attr_index, std::vector<Constraint> target_cons, std::vector<int>& indexindex, Index &allIndex, IndexManager &im);
     //deleteRecord—>deleteRecordAccordCons—>调用的函数，真正地删除一个数据
     char* deleteOneRecord(char *p);
 };
