@@ -244,10 +244,15 @@ bool TreeNode<T>::FindKey(T key, unsigned int& index)
                     index = locate;
                     return true;
                 }
-                else if (keys[locate] > key)
+                else if (keys[locate] > key){
+                    if(right==locate) break;
                     right = locate;
+                }
                 else
+                {
+                    if(left==locate) break;
                     left = locate;
+                }
             }
 
             if (keys[left] > key)
@@ -258,6 +263,7 @@ bool TreeNode<T>::FindKey(T key, unsigned int& index)
             return false;
         }
     }
+    return false;
 }
 
 template <class T>
@@ -351,7 +357,7 @@ unsigned int TreeNode<T>::AddKey(T& key, int value)
 
     if (!key_num) {
         key_num++;
-        keys[0] = value;
+        keys[0] = key;            //修改
         vals[0] = value;
         return 0;
     }
@@ -1015,21 +1021,42 @@ template <class T>
 void BPlusTree<T>::WrittenBackToDiskAll()
 {
     int i, j, block_num, offset, page_id;
-    string fname = "./database/index/" + file_name;
+    std::string fname = file_name;
+    FILE *f = fopen(fname.c_str(), "r");
+    if(f==NULL) fname="./database/index/"+file_name;
+    fclose(f);
     //string fname = file_name;
-    GetFile(fname);
+    //GetFile(fname);
     block_num = GetBlockNum(fname);
 
     Tree ntmp = leaf_head;
-
-    for (j = 0, i = 0; ntmp != NULL; j++) {
-        char* p = buf_manager.getPage(fname, j);
-        offset = 0;
-        memset(p, 0, PAGESIZE);
-        int rec_i;
-        int flag;
+    
+    j = 0;
+    char* p = buf_manager.getPage(fname, j);
+    offset = 0;
+    memset(p, 0, PAGESIZE);
+    
+    for ( i = 0; ntmp != NULL;) {
+        
         for (i = 0; i < ntmp->key_num; i++) {
-
+            
+            std::stringstream stream1;
+            stream1 << ntmp->keys[i];
+            std::string s1 = stream1.str();
+            
+            std::stringstream stream2;
+            stream2 << ntmp->vals[i];
+            std::string s2 = stream2.str();
+            if(offset+5+s1.length()+s2.length()>=PAGESIZE){
+                while(offset<PAGESIZE) p[offset++]='\0';
+                page_id = buf_manager.getPageId(fname, j);
+                buf_manager.modifyPage(page_id);
+                j++;
+                char* p = buf_manager.getPage(fname, j);
+                offset = 0;
+                memset(p, 0, PAGESIZE);
+            }
+            
             p[offset++] = '#';
             p[offset++] = ' ';
 
@@ -1039,13 +1066,14 @@ void BPlusTree<T>::WrittenBackToDiskAll()
             p[offset++] = ' ';
         }
 
-        p[offset] = '\0';
-
-        page_id = buf_manager.getPageId(fname, j);
-        buf_manager.modifyPage(page_id);
 
         ntmp = ntmp->next;
     }
+    
+    p[offset] = '\0';
+    page_id = buf_manager.getPageId(fname, j);
+    buf_manager.modifyPage(page_id);
+    j++;
 
     while (j < block_num) {
         char* p = buf_manager.getPage(fname, j);

@@ -241,6 +241,7 @@ int RecordManager::deleteRecordAccordCons(std::string table_name, int block_id, 
             //代表满足条件
             //删除对应的索引
             std::vector<data> allTempData = tuple.getData();
+
             for(int ii=0; ii<indexindex.size(); ii++){
                 std::string theName = target_attr.name[allIndex.location[indexindex[ii]]];
                 std::string theIndexName = allIndex.name[indexindex[ii]];
