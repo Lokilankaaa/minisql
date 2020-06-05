@@ -113,11 +113,11 @@ void Interpreter::execute() {
     }
 
     catch (const e_index_exist &e) {
-        std::cout << "minisql > ERROR! The index has existed." << std::endl;
+        std::cout << "minisql > ERROR! The index existed." << std::endl;
     }
 
     catch (const e_index_not_exist &e) {
-        std::cout << "minisql > ERROR! The index doesn't existed." << std::endl;
+        std::cout << "minisql > ERROR! The index doesn't exist." << std::endl;
     }
 
     catch (const e_index_full &e) {

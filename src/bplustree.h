@@ -238,19 +238,17 @@ bool TreeNode<T>::FindKey(T key, unsigned int& index)
             left = locate = 0;
             right = key_num - 1;
 
-            while (right >= left) {
+            while (right > left+1) {
                 locate = (left + right) / 2;
                 if (keys[locate] == key) {
                     index = locate;
                     return true;
                 }
                 else if (keys[locate] > key){
-                    if(right==locate) break;
                     right = locate;
                 }
                 else
                 {
-                    if(left==locate) break;
                     left = locate;
                 }
             }
@@ -276,9 +274,9 @@ TreeNode<T>* TreeNode<T>::SplitNode(T& key)
         //获得分裂节点父节点key值
         key = keys[min_node_num];
 
-        for (unsigned int i = 0; i < (degree + 1) - (min_node_num + 1) + 1; i++) {
+        for (unsigned int i = 0; i < (degree + 1) - (min_node_num + 1); i++) {
             //拷贝key值,原来的key以0代替
-            if (i < degree - min_node_num) {
+            if (i < degree - min_node_num - 1) {
                 new_node->keys[i] = this->keys[i + min_node_num + 1];
                 this->keys[i + min_node_num + 1] = T();
             }
@@ -295,12 +293,12 @@ TreeNode<T>* TreeNode<T>::SplitNode(T& key)
     else {
         key = keys[min_node_num + 1];
 
-        for (unsigned int i = 0; i < degree - min_node_num; i++) {
+        for (unsigned int i = 0; i < degree - min_node_num-1; i++) {
             new_node->keys[i] = keys[i + min_node_num + 1];
             new_node->vals[i] = this->vals[i + min_node_num + 1];
 
             keys[i + min_node_num + 1] = T();
-            vals[i + min_node_num + 1] = 0;
+            vals[i + min_node_num + 1] = int();
         }
 
         new_node->next = this->next;
@@ -402,7 +400,7 @@ bool TreeNode<T>::DeleteKeyByIndex(unsigned int index)
             }
 
             keys[key_num - 1] = T();
-            vals[key_num - 1] = 0;
+            vals[key_num - 1] = int();
         }
 
         key_num--;
@@ -487,7 +485,7 @@ void BPlusTree<T>::FindToLeaf(Tree node, T key, SearchNodeParse& snp)
         if (!(node->isleaf)) {
             node = node->children[index + 1];
 
-            while (!node->isleaf)
+            while (!(node->isleaf))
                 node = node->children[0];
 
             snp.pNode = node;
@@ -693,7 +691,6 @@ bool BPlusTree<T>::AdjustAfterDelete(Tree node)
 
                     node->key_num++;
                     parent->keys[index] = node->keys[0];
-
                     return true;
                 }
                 else {
@@ -711,7 +708,6 @@ bool BPlusTree<T>::AdjustAfterDelete(Tree node)
 
                     return AdjustAfterDelete(parent);
                 }
-
             }
             else {
                 if (parent->children[0] == node)
@@ -867,18 +863,15 @@ void BPlusTree<T>::DropTree(Tree node)
 template <class T>
 void BPlusTree<T>::SearchRange(T& key1, T& key2, vector<int>& vals, int flag)
 {
-    SearchNodeParse snp1, snp2;
-    bool finished;
-    unsigned int index;
-    Tree node;
-
     if (!root)
         return;
     if (flag == 2) {
+        SearchNodeParse snp1;
         FindToLeaf(root, key1, snp1);
-        finished = false;
-        node = snp1.pNode;
-        index = snp1.index;
+
+        bool finished = false;
+        Tree node = snp1.pNode;
+        unsigned int index = snp1.index;
 
         do {
             finished = node->FindLower(index, vals);
@@ -890,11 +883,12 @@ void BPlusTree<T>::SearchRange(T& key1, T& key2, vector<int>& vals, int flag)
         } while (!finished);
     }
     else if (flag == 1) {
+        SearchNodeParse snp2;
         FindToLeaf(root, key2, snp2);
 
-        finished = false;
-        node = snp2.pNode;
-        index = snp2.index;
+        bool finished = false;
+        Tree node = snp2.pNode;
+        unsigned  int index = snp2.index;
 
         do {
             finished = node->FindLower(index, vals);
@@ -906,12 +900,13 @@ void BPlusTree<T>::SearchRange(T& key1, T& key2, vector<int>& vals, int flag)
         } while (!finished);
     }
     else {
+        SearchNodeParse snp1, snp2;
         FindToLeaf(root, key1, snp1);
         FindToLeaf(root, key2, snp2);
-        finished = false;
-
+        bool finished = false;
+        unsigned int index;
         if (key1 > key2) {
-            node = snp2.pNode;
+            Tree node = snp2.pNode;
             index = snp2.index;
 
             do {
@@ -924,7 +919,7 @@ void BPlusTree<T>::SearchRange(T& key1, T& key2, vector<int>& vals, int flag)
             } while (!finished);
         }
         else {
-            node = snp1.pNode;
+            Tree node = snp1.pNode;
             index = snp1.index;
 
             do {
@@ -1030,33 +1025,33 @@ void BPlusTree<T>::WrittenBackToDiskAll()
     block_num = GetBlockNum(fname);
 
     Tree ntmp = leaf_head;
-    
+
     j = 0;
     char* p = buf_manager.getPage(fname, j);
     offset = 0;
     memset(p, 0, PAGESIZE);
-    
+    int count=-1;
     for ( i = 0; ntmp != NULL;) {
-        
+        count++;
         for (i = 0; i < ntmp->key_num; i++) {
-            
+            if(count!=0&&i==0) continue;
             std::stringstream stream1;
             stream1 << ntmp->keys[i];
             std::string s1 = stream1.str();
-            
+
             std::stringstream stream2;
             stream2 << ntmp->vals[i];
             std::string s2 = stream2.str();
-            if(offset+5+s1.length()+s2.length()>=PAGESIZE){
-                while(offset<PAGESIZE) p[offset++]='\0';
+            if(offset+4+s1.length()+s2.length()>=PAGESIZE){
+                while(offset<PAGESIZE) p[offset++]=' ';
                 page_id = buf_manager.getPageId(fname, j);
                 buf_manager.modifyPage(page_id);
                 j++;
-                char* p = buf_manager.getPage(fname, j);
+                p = buf_manager.getPage(fname, j);
                 offset = 0;
                 memset(p, 0, PAGESIZE);
             }
-            
+
             p[offset++] = '#';
             p[offset++] = ' ';
 
@@ -1069,12 +1064,11 @@ void BPlusTree<T>::WrittenBackToDiskAll()
 
         ntmp = ntmp->next;
     }
-    
+
     p[offset] = '\0';
     page_id = buf_manager.getPageId(fname, j);
     buf_manager.modifyPage(page_id);
     j++;
-
     while (j < block_num) {
         char* p = buf_manager.getPage(fname, j);
         memset(p, 0, PAGESIZE);

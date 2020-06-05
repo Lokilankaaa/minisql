@@ -243,6 +243,7 @@ int RecordManager::deleteRecordAccordCons(std::string table_name, int block_id, 
             std::vector<data> allTempData = tuple.getData();
 
             for(int ii=0; ii<indexindex.size(); ii++){
+                if(indexindex[ii] == -1) continue;
                 std::string theName = target_attr.name[allIndex.location[indexindex[ii]]];
                 std::string theIndexName = allIndex.name[indexindex[ii]];
                 int theType = target_attr.type[allIndex.location[indexindex[ii]]];
@@ -491,6 +492,7 @@ void RecordManager::insertRecord(std::string table_name, TUPLE& tuple){
             if(i==allIndex.location[j]){
                 std::string theName = allAttr.name[i];
                 std::string thePath = "INDEX_FILE_"+theName+"_"+table_name+"_"+allIndex.name[j]+"_"+num2str(allAttr.type[allIndex.location[j]]);
+//                std::cout << values[i].int_data<<std::endl;
                 im.InsertIndex(thePath, values[i], which_block);
             }
         }
@@ -519,6 +521,10 @@ int RecordManager::deleteRecord(std::string table_name){
         while (true){
             if(*p =='\0' || p >= temp+PAGESIZE) break;
             TUPLE tuple = readOneTuple(p, allAttr);
+            if(*(p+getTupleLength(p)-2)=='1'){
+                p = p+getTupleLength(p);
+                continue;
+            }
             for(int j=0; j<allAttr.num; j++){
                 for(int k=0; k<allIndex.num; k++){
                     if(allIndex.location[k]==j){
@@ -588,6 +594,7 @@ void RecordManager::createIndex(IndexManager &index_manager, std::string table_n
             p = p + getTupleLength(p);
         }
     }
+//    int a = 0;
 }
 
 //功能带有多个条件的删除，删除满足vector<Constraint>所有条件的记录

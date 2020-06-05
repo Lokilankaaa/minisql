@@ -35,14 +35,18 @@ CONSTRAINT API::check_cons(std::string &str) {
 Error API::create_table(std::string &table_name, attributes_set &attrs, Index &index, int pk) {
     if (catalog_manager::createtable(table_name, attrs, index, pk) == successful) {
         rec_manager.createTableFile(table_name);
-        create_index(attrs.name[attrs.primary_key]+"pk", table_name, attrs.name[attrs.primary_key]);
-    }
-    else
+        create_index(attrs.name[attrs.primary_key] + "pk", table_name, attrs.name[attrs.primary_key]);
+    } else
         return table_exist;
     return successful;
 }
 
 Error API::drop_table(std::string &table_name) {
+    auto indexes = catalog_manager::getAllindex(table_name);
+    if (indexes.num > 0)
+        for (int i = 0; i < indexes.num; ++i) {
+            drop_index(indexes.name[i]);
+        }
     if (catalog_manager::droptable(table_name) == successful)
         rec_manager.dropTableFile(table_name);
     else
@@ -169,7 +173,7 @@ table API::select(std::vector<std::string> &attrs, std::vector<std::string> &tab
                 } else if (!tmp_data.type) {
                     tmp_data.float_data = str2num<float>(res[2]);
                 } else {
-                    tmp_data.char_data = res[2].substr(1, res[2].size()-2);
+                    tmp_data.char_data = res[2].substr(1, res[2].size() - 2);
                 }
                 tmp_con.conData = tmp_data, tmp_con.conSymbol = check_cons(res[1]);
                 auto t = rec_manager.selectRecord(tables[0], res[0], tmp_con);
