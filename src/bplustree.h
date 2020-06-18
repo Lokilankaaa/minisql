@@ -13,6 +13,8 @@
 #define TYPE_INT -1
 #define TYPE_FLOAT 0
 
+extern BufferManager buf_manager;
+
 template<typename T>
 inline void copyString(char *p, int &offset, T data) {
     std::stringstream stream;
@@ -22,25 +24,25 @@ inline void copyString(char *p, int &offset, T data) {
         p[offset] = s1[i];
 }
 
-extern BufferManager buf_manager;
-
-using namespace std;
+//模板类TreeNode，用于存放B+树的结点数据以及进行相关的操作
+//使用模板类保证直接适配int，float, string三种类型数据
+//减少代码规模
 template <typename T>
 class TreeNode {
 public:
     //该结点内key数量
-    unsigned int key_num;
+    unsigned int num;
     //指向父节点指针
     TreeNode* parent;
     //存放key容器
-    vector <T> keys;
+    std::vector <T> keys;
     //指向子结点的指针容器
-    vector <TreeNode*> children;
-    vector <int> vals;
+    std::vector <TreeNode*> childs;
+    std::vector <int> vals;
     //指向下一个叶结点的指针
-    TreeNode* next;
+    TreeNode* nextLeafNode;
     //此结点是否是叶结点的标志
-    bool isleaf;
+    bool isLeaf;
     //此树的度
     int degree;
 
@@ -52,38 +54,38 @@ public:
     //析构函数
     ~TreeNode();
     //功能：判断是否为根结点
-    bool IsRoot();
+    bool isRoot();
     //输入：key值，(index)
     //输出：bool
     //功能：判断结点内是否存在某key值，并通过index引用返回该值index
     //并通过函数返回bool值说明是否找到
-    bool FindKey(T key, unsigned int& index);
+    bool findKey(T key, unsigned int &index);
     //输出：TreeNode指针
     //功能：将一个结点分裂成两个结点(与B+树的分裂有关)
     //新结点为本结点的下一个结点
     //同时功过key引用返回去到上层的key值
-    TreeNode* SplitNode(T& key);
+    TreeNode* splitNode(T &key);
     //输入：key值
     //输出：添加的position
     //功能：在枝干结点中添加key值，并返回添加的位置
-    unsigned int AddKey(T& key);
+    unsigned int addKey(T &key);
     //输入：key值
     //输出：添加的position
     //功能：在叶结点中添加key值，并返回添加的位置
-    unsigned int AddKey(T& key, int val);
+    unsigned int addKey(T &key, int val);
     //输入：key值对应的index
     //输出：bool
     //功能：在结点中删除index对应的key值
-    bool DeleteKeyByIndex(unsigned int index);
+    bool deleteKeyByIndex(unsigned int index);
     //返回下一个相邻叶结点指针
     TreeNode* nextLeaf();
     //输入:起始index,终止key，返回结果vector容器
     //输出:到达终止key返回true，否则返回flase
     //功能：返回一定范围的value容器
-    bool FindHigher(unsigned int index, T& key, vector<int>& values);
-    bool FindLower(unsigned int index, vector<int>& values);
-
-    void PrintList();
+    bool findRange(unsigned int index, T& key, std::vector<int>& vals);
+    bool findRange2(unsigned int index, std::vector<int>& vals);
+    
+    void printl();
 };
 
 //模板类BPlusTree，用于对整个B+树的操作
@@ -91,12 +93,11 @@ public:
 //完成文件的读写操作
 template <typename T>
 class BPlusTree {
-
 private:
     //重命名TreeNode指针，方便后边进行操作区分
     typedef TreeNode<T>* Tree;
     //特殊结构，用于临时存储查找的key值及所处的位置，方便进行操作
-    struct SearchNodeParse {
+    struct searchNodeParse {
         Tree pNode; //包含对应key的结点指针
         unsigned int index; //key在结点中的index
         bool ifFound; //是否找到该key
@@ -104,11 +105,11 @@ private:
 
 private:
     //文件名，用于文件读写操作
-    string file_name;
+    std::string file_name;
     //根结点指针
     Tree root;
     //叶结点的左部头指针
-    Tree leaf_head;
+    Tree leafHead;
     //此树key的数量
     unsigned int key_num;
     //此树的level数量
@@ -125,303 +126,357 @@ public:
     //构造函数
     //用于构造一颗新的树，确定m_name,key的size，树的度
     //同时调用其他函数为本树分配内存
-    BPlusTree(string m_name, int key_size, int degree);
+    BPlusTree(std::string m_name, int key_size, int degree);
     //析构函数
     //释放相应的内存
     ~BPlusTree();
 
     //根据key值返回对应的Value
-    int SearchVal(T& key);
+    int searchVal(T &key);
     //输入：key值及其value
     //输出：bool
     //功能：在树中插入一个key值
     //返回是否插入成功
-    bool InsertKey(T& key, int val);
+    bool insertKey(T &key, int val);
     //输入：key值
     //输出：bool
     //功能：在树中删除一个key值
     //返回是否删除成功
-    bool DeleteKey(T& key);
+    bool deleteKey(T &key);
     //输入：树的根结点
     //功能：删除整棵树并释放内存空间，主要用在析构函数中
-    void DropTree(Tree node);
+    void dropTree(Tree node);
     //输入：key1，key2，返回vals的容器
     //功能：返回范围搜索结果，将value放入vals容器中
-    void SearchRange(T& key1, T& key2, vector<int>& vals, int flag);
+    void searchRange(T &key1, T &key2, std::vector<int>& vals, int flag);
 
     //从磁盘读取所有数据
-    void ReadFromDiskAll();
+    void readFromDiskAll();
     //将新数据写入磁盘
-    void WrittenBackToDiskAll();
+    void writtenbackToDiskAll();
     //在磁盘中读取某一块的数据
-    void ReadFromDisk(char* p, char* end);
+    void readFromDisk(char *p, char* end);
+    
+    void printleaf();
 
-    void PrintLeaf();
-
-    string findTableName(data index);
 private:
     //初始化B+树，并分配内存空间
-    void InitTree();
+    void initTree();
     //用于插入某key后结点满情况，对整棵树进行调整
-    bool AdjustAfterInsert(Tree node);
+    bool adjustAfterinsert(Tree pNode);
     //用于删除某key后可能出现结点空情况，对整棵树进行调整
-    bool AdjustAfterDelete(Tree node);
+    bool adjustAfterDelete(Tree pNode);
     //用于查找某key值所处的叶结点位置
-    void FindToLeaf(Tree node, T key, SearchNodeParse& snp);
+    void findToLeaf(Tree pNode, T key, searchNodeParse &snp);
     //获取文件大小
-    void GetFile(string fname);
-    int GetBlockNum(string table_name);
+    void getFile(std::string file_path);
+    int getBlockNum(std::string table_name);
 };
 
 
 
 template <class T>
-TreeNode<T>::TreeNode(int in_degree, bool leaf) :
-        key_num(0),
-        parent(NULL),
-        next(NULL),
-        isleaf(leaf),
-        degree(in_degree)
+TreeNode<T>::TreeNode(int in_degree, bool Leaf):
+    num(0),
+    parent(NULL),
+    nextLeafNode(NULL),
+    isLeaf(Leaf),
+    degree(in_degree)
 {
-    //degree+1个key指向degree+2个子节点
-    for (unsigned i = 0; i < degree + 1; i++) {
-        children.push_back(NULL);
+    for (unsigned i = 0; i < degree+1; i++) {
+        childs.push_back(NULL);
         keys.push_back(T());
-        vals.push_back(0);
+        vals.push_back(int());
     }
-    children.push_back(NULL);
+
+    childs.push_back(NULL);
 }
 
 template <class T>
 TreeNode<T>::~TreeNode() {};
 
+//功能：判断是否为根结点
 template <class T>
-bool TreeNode<T>::IsRoot()
+bool TreeNode<T>::isRoot()
 {
-    if (!parent)
-        return true;
-    else
+    if (parent != NULL)
         return false;
+    else
+        return true;
 }
 
-template<class T>
-bool TreeNode<T>::FindKey(T key, unsigned int& index)
+//输入：key值，(index)
+//输出：bool
+//功能：判断结点内是否存在某key值，并通过index引用返回该值index
+//如不存在，则返回最接近的index
+//并通过函数返回bool值说明是否找到
+template <class T>
+bool TreeNode<T>::findKey(T key, unsigned int &index)
 {
-    unsigned int left, right, locate;
-
-    if (!key_num) {
+    if (num == 0) { //结点内key数量为0
         index = 0;
         return false;
-    }
-    else {
-        if (keys[0] > key) {
+    } else {
+        //判断key值是否超过本结点内最大值(key不在本结点内)
+        if (keys[num-1] < key) {
+            index = num;
+            return false;
+        //判断key值是否小于本结点内最小值(key不在本结点内)
+        } else if (keys[0] > key) {
             index = 0;
             return false;
-        }
-        else if (keys[key_num - 1] < key) {
-            index = key_num;
-            return false;
-        }
-        else if (key_num < 30) {
-            for (unsigned int i = 0; i < key_num; i++) {
-                if (keys[i] == key)
+        } else if (num <= 20) {
+        //结点内key数量较少时直接线性遍历搜索即可
+            for (unsigned int i = 0; i < num; i++) {
+                if (keys[i] == key) {
+                    index = i;
                     return true;
-                else if (keys[i] < key)
+                } else if (keys[i] < key)
                     continue;
-                else {
+                else if(keys[i] > key) {
                     index = i;
                     return false;
                 }
             }
-        }
-        else {
-            left = locate = 0;
-            right = key_num - 1;
+        } else if(num > 20) {
+        //结点内key数量过多时采用二分搜索
+            unsigned int left = 0, right = num-1, pos = 0;
 
             while (right > left+1) {
-                locate = (left + right) / 2;
-                if (keys[locate] == key) {
-                    index = locate;
+                pos = (right + left) / 2;
+                if (keys[pos] == key) {
+                    index = pos;
                     return true;
-                }
-                else if (keys[locate] > key){
-                    right = locate;
-                }
-                else
-                {
-                    left = locate;
+                } else if (keys[pos] < key) {
+                    left = pos;
+                } else if (keys[pos] > key) {
+                    right = pos;
                 }
             }
 
-            if (keys[left] > key)
+            if (keys[left] >= key) {
                 index = left;
-            else if (keys[right] < key)
+                return (keys[left] == key);
+            } else if (keys[right] >= key) {
                 index = right;
-
-            return false;
-        }
+                return (keys[right] == key);
+            } else if(keys[right] < key) {
+                index = right ++;
+                return false;
+            }
+        }//二分搜索结束
     }
+
     return false;
 }
 
+//输出：TreeNode指针
+//功能：将一个结点分裂成两个结点(与B+树的分裂有关)
+//新结点为本结点的下一个结点
+//同时功过key引用返回去到上层的key值
 template <class T>
-TreeNode<T>* TreeNode<T>::SplitNode(T& key)
+TreeNode<T>* TreeNode<T>::splitNode(T &key)
 {
-    unsigned int min_node_num = (degree - 1) / 2;
-    TreeNode* new_node = new TreeNode(degree, this->isleaf);
+    //最小结点数量
+    unsigned int minmumNodeNum = (degree - 1) / 2;
+    //创建新结点
+    TreeNode* newNode = new TreeNode(degree, this->isLeaf);
 
-    if (!isleaf) {
-        //获得分裂节点父节点key值
-        key = keys[min_node_num];
-
-        for (unsigned int i = 0; i < (degree + 1) - (min_node_num + 1); i++) {
-            //拷贝key值,原来的key以0代替
-            if (i < degree - min_node_num - 1) {
-                new_node->keys[i] = this->keys[i + min_node_num + 1];
-                this->keys[i + min_node_num + 1] = T();
-            }
-            //拷贝子结点指针,原来的指针以NULL代替
-            new_node->children[i] = this->children[i + min_node_num + 1];
-            new_node->children[i]->parent = new_node;
-            this->children[i + min_node_num + 1] = NULL;
-        }
-        //调整key的数量与节点相互位置
-        new_node->parent = this->parent;
-        this->keys[min_node_num] = T();
-        this->key_num = new_node->key_num = min_node_num;
+    /*
+    if (newNode == NULL) {
+        cout << "Problems in allocate momeory of TreeNode in splite node of " << key << endl;
+        exit(2);
     }
-    else {
-        key = keys[min_node_num + 1];
+    */
 
-        for (unsigned int i = 0; i < degree - min_node_num-1; i++) {
-            new_node->keys[i] = keys[i + min_node_num + 1];
-            new_node->vals[i] = this->vals[i + min_node_num + 1];
-
-            keys[i + min_node_num + 1] = T();
-            vals[i + min_node_num + 1] = int();
+    //当前结点为叶结点情况
+    if (isLeaf) {
+        key = keys[minmumNodeNum + 1];
+        //将右半部分key值拷贝至新结点内
+        for (unsigned int i = minmumNodeNum + 1; i < degree; i++) {
+            newNode->keys[i-minmumNodeNum-1] = keys[i];
+            keys[i] = T();
+            newNode->vals[i-minmumNodeNum-1] = vals[i];
+            vals[i] = int();
         }
+        //将新结点放置到本结点右边
+        newNode->nextLeafNode = this->nextLeafNode;
+        this->nextLeafNode = newNode;
+        newNode->parent = this->parent;
 
-        new_node->next = this->next;
-        new_node->parent = this->parent;
-        this->next = new_node;
+        //调整两结点内key数量
+        newNode->num = minmumNodeNum;
+        this->num = minmumNodeNum + 1;
+    } else if (!isLeaf) {  //非叶结点情况
+        key = keys[minmumNodeNum];
+        //拷贝子结点指针至新结点
+        for (unsigned int i = minmumNodeNum + 1; i < degree+1; i++) {
+            newNode->childs[i-minmumNodeNum-1] = this->childs[i];
+            newNode->childs[i-minmumNodeNum-1]->parent = newNode;
+            this->childs[i] = NULL;
+        }
+        //拷贝key值至新结点
+        for (unsigned int i = minmumNodeNum + 1; i < degree; i++) {
+            newNode->keys[i-minmumNodeNum-1] = this->keys[i];
+            this->keys[i] = T();
+        }
+        //调整结点相互位置关系
+        this->keys[minmumNodeNum] = T();
+        newNode->parent = this->parent;
 
-        new_node->key_num = min_node_num;
-        this->key_num = new_node->key_num + 1;
+        //调整结点内key数量
+        newNode->num = minmumNodeNum;
+        this->num = minmumNodeNum;
     }
 
-    return new_node;
+    return newNode;
 }
 
+
+
+//输入：key值
+//输出：添加的position
+//功能：在枝干结点中添加key值，并返回添加的位置
 template <class T>
-unsigned int TreeNode<T>::AddKey(T& key)
+unsigned int TreeNode<T>::addKey(T &key)
 {
-    unsigned int index = 0;
-    bool exist = FindKey(key, index);
-    if (!key_num) {
+    //本结点内无key
+    if (num == 0) {
         keys[0] = key;
-        ++key_num;
+        num ++;
         return 0;
-    }
-    else {
-        if (!exist) {
-            //调整插入后key与子节点指针位置
-            for (unsigned int i = key_num; i > index; i--) {
-                keys[i] = keys[i - 1];
-                children[i] = children[i - 1];
-            }
-
-            key_num++;
+    } else {
+        //查找是否Key值已经存在
+        unsigned int index = 0;
+        bool exist = findKey(key, index);
+        if (exist) {
+            /*
+            cout << "Error:In add(T &key),key has already in the tree!" << endl;
+            exit(3);
+            */
+        } else { //不存在，可以进行插入
+            //调整其他key值
+            for (unsigned int i = num; i > index; i--)
+                keys[i] = keys[i-1];
             keys[index] = key;
-            children[index + 1] = NULL;
+
+            //调整子结点指针情况
+            for (unsigned int i = num + 1; i > index+1; i--)
+                childs[i] = childs[i-1];
+            childs[index+1] = NULL;
+            num++;
 
             return index;
         }
-        else {
-            throw e_index_exist();
-        }
-    }
-}
-
-template <class T>
-unsigned int TreeNode<T>::AddKey(T& key, int value)
-{
-    unsigned int index = 0;
-    bool exist = FindKey(key, index);
-
-    if (!isleaf) {
-        throw e_index_not_exist();
-        return -1;
     }
 
-    if (!key_num) {
-        key_num++;
-        keys[0] = key;            //修改
-        vals[0] = value;
-        return 0;
-    }
-    else {
-        if (!exist) {
-            for (unsigned int i = key_num; i > index; i--) {
-                keys[i] = keys[i - 1];
-                vals[i] = vals[i - 1];
-            }
-            key_num++;
-            keys[index] = key;
-            vals[index] = value;
-            return index;
-        }
-        else {
-            throw e_index_exist();
-        }
-    }
     return 0;
 }
 
-template<class T>
-bool TreeNode<T>::DeleteKeyByIndex(unsigned int index)
-{
-    if (index > key_num) {
-        throw e_index_full();
-        return false;
+//输入：key值
+//输出：添加的position
+//功能：在叶结点中添加key值，并返回添加的位置
+template <class T>
+unsigned int TreeNode<T>::addKey(T &key, int val)
+{    //若非叶结点，无法插入
+    if (!isLeaf) {
+        /*
+        cout << "Error:add(T &key,int val) is a function for leaf nodes" << endl;
+        */
+        return -1;
     }
-    else {
-        if (!isleaf) {
-            for (unsigned int i = index; i < key_num - 1; i++) {
-                keys[i] = keys[i + 1];
-                children[i + 1] = children[i + 2];
-            }
-            keys[key_num - 1] = T();
-            children[key_num] = NULL;
-        }
-        else {
-            for (unsigned int i = index; i < key_num - 1; i++) {
-                keys[i] = keys[i + 1];
-                vals[i] = vals[i + 1];
-            }
 
-            keys[key_num - 1] = T();
-            vals[key_num - 1] = int();
+    //结点内没有key值
+    if (num == 0) {
+        keys[0] = key;
+        vals[0] = val;
+        num ++;
+        return 0;
+    } else { //正常插入
+        unsigned int index = 0;
+        bool exist = findKey(key, index);
+        if (exist) {
+            /*
+            cout << "Error:In add(T &key, int val),key has already in the tree!" << endl;
+            exit(3);
+            */
+        } else {
+            //逐个调整key值
+            for (unsigned int i = num; i > index; i--) {
+                keys[i] = keys[i-1];
+                vals[i] = vals[i-1];
+            }
+            keys[index] = key;
+            vals[index] = val;
+            num++;
+            return index;
+        }
+    }
+
+    return 0;
+}
+
+
+//输入：key值对应的index
+//输出：bool
+//功能：在结点中删除index对应的key值
+template <class T>
+bool TreeNode<T>::deleteKeyByIndex(unsigned int index)
+{
+    //index错误，超过本结点范围
+    if(index > num) {
+        /*
+        cout << "Error:In removeAt(unsigned int index), index is more than num!" << endl;
+        */
+        return false;
+    } else { //正常进行删除
+        if (isLeaf) { //叶结点情况
+            //逐个调整key值
+            for (unsigned int i = index; i < num-1; i++) {
+                keys[i] = keys[i+1];
+                vals[i] = vals[i+1];
+            }
+            keys[num-1] = T();
+            vals[num-1] = int();
+        } else { //枝干结点情况
+            //调整key值
+            for(unsigned int i = index; i < num-1; i++)
+                keys[i] = keys[i+1];
+
+            //调整子结点指针
+            for(unsigned int i = index+1;i < num;i ++)
+                childs[i] = childs[i+1];
+
+            keys[num-1] = T();
+            childs[num] = NULL;
         }
 
-        key_num--;
+        num--;
         return true;
     }
+
     return false;
 }
 
+
+//返回下一个相邻叶结点指针
 template <class T>
 TreeNode<T>* TreeNode<T>::nextLeaf()
 {
-    return next;
+    return nextLeafNode;
 }
 
+
+
+//输入，起始index,终止key，返回结果vector容器
+//输出:到达终止key返回true，否则返回flase
+//功能：返回一定范围的value容器
 template <class T>
-bool TreeNode<T>::FindHigher(unsigned int index, T& key, vector<int>& values)
+bool TreeNode<T>::findRange(unsigned int index, T& key, std::vector<int>& valsout)
 {
     unsigned int i;
-
-    for (i = index; i < key_num && keys[i] <= key; i++)
-        values.push_back(vals[i]);
+    for (i = index; i < num && keys[i] <= key; i++)
+        valsout.push_back(vals[i]);
 
     if (keys[i] >= key)
         return true;
@@ -430,154 +485,182 @@ bool TreeNode<T>::FindHigher(unsigned int index, T& key, vector<int>& values)
 }
 
 template <class T>
-bool TreeNode<T>::FindLower(unsigned int index, vector<int>& values)
+bool TreeNode<T>::findRange2(unsigned int index, std::vector<int>& valsout)
 {
     unsigned int i;
-
-    for (i = index; i < key_num; i++)
-        values.push_back(vals[i]);
+    for (i = index; i < num; i++)
+        valsout.push_back(vals[i]);
 
     return false;
 }
 
-
-/*Class BPlusTree*/
-
-template<class T>
-BPlusTree<T>::BPlusTree(string m_name, int key_size, int degree) :
-        file_name(m_name),
-        key_num(0),
-        level(0),
-        node_num(0),
-        root(NULL),
-        leaf_head(NULL),
-        key_size(key_size),
-        degree(degree)
+//构造函数
+//用于构造一颗新的树，确定m_name,key的size，树的度
+//初始化各个变量
+//同时调用其他函数为本树分配内存
+template <class T>
+BPlusTree<T>::BPlusTree(std::string in_name, int keysize, int in_degree):
+    file_name(in_name),
+    key_num(0),
+    level(0),
+    node_num(0),
+    root(NULL),
+    leafHead(NULL),
+    key_size(keysize),
+    degree(in_degree)
 {
-    InitTree();
-    ReadFromDiskAll();
+    //初始化分配内存并从磁盘读取数据
+    //创建索引
+    initTree();
+    readFromDiskAll();
 }
 
-template<class T>
-BPlusTree<T>::~BPlusTree()
+
+//析构函数
+//释放相应的内存
+template <class T>
+BPlusTree<T>:: ~BPlusTree()
 {
-    DropTree(root);
+    dropTree(root);
     key_num = 0;
     root = NULL;
     level = 0;
 }
 
-template<class T>
-void BPlusTree<T>::InitTree()
+//初始化B+树，并分配内存空间
+template <class T>
+void BPlusTree<T>::initTree()
 {
     root = new TreeNode<T>(degree, true);
-    leaf_head = root;
     key_num = 0;
-    level = node_num = 1;
+    level = 1;
+    node_num = 1;
+    leafHead = root;
 }
 
-template<class T>
-void BPlusTree<T>::FindToLeaf(Tree node, T key, SearchNodeParse& snp)
+//用于查找某key值所处的叶结点位置
+template <class T>
+void BPlusTree<T>::findToLeaf(Tree pNode, T key, searchNodeParse &snp)
 {
     unsigned int index = 0;
-
-    if (node->FindKey(key, index)) {
-        if (!(node->isleaf)) {
-            node = node->children[index + 1];
-
-            while (!(node->isleaf))
-                node = node->children[0];
-
-            snp.pNode = node;
+    //在对应结点内查找key值
+    if (pNode->findKey(key, index)) {
+        //若此结点是叶结点，则查找成功
+        if (pNode->isLeaf) {
+            snp.pNode = pNode;
+            snp.index = index;
+            snp.ifFound = true;
+        } else {
+            //此结点不是子结点，查找它的下一层
+            pNode = pNode->childs[index+1];
+            while (!pNode->isLeaf) {
+                pNode = pNode->childs[0];
+            }
+            //因为已找到key值，所以其最底层叶结点index[0]即为该key
+            snp.pNode = pNode;
             snp.index = 0;
             snp.ifFound = true;
         }
-        else {
-            snp.pNode = node;
-            snp.index = index;
-            snp.ifFound = true;
-        }
-    }
-    else {
-        if (!(node->isleaf))
-            FindToLeaf(node->children[index], key, snp);
-        else {
-            snp.pNode = node;
+
+    } else { //本结点内未找到该key
+        if (pNode->isLeaf) {
+            //若此结点已经是叶结点则查找失败
+            snp.pNode = pNode;
             snp.index = index;
             snp.ifFound = false;
+        } else {
+            //递归寻找下一层
+            findToLeaf(pNode->childs[index], key, snp);
         }
     }
+
+    return;
 }
 
+
+//输入：key值及其value
+//输出：bool
+//功能：在树中插入一个key值
+//返回是否插入成功
 template <class T>
-bool BPlusTree<T>::InsertKey(T& key, int val)
+bool BPlusTree<T>::insertKey(T &key, int val)
 {
-    SearchNodeParse snp;
+    searchNodeParse snp;
+    //根结点不存在
     if (!root)
-        InitTree();
-    FindToLeaf(root, key, snp);
-    if (snp.ifFound) {
-        throw e_unique_conflict();
+        initTree();
+    //查找插入值是否存在
+    findToLeaf(root, key, snp);
+    if (snp.ifFound) { //已存在
+        /*
+        cout << "Error:in insert key to index: the duplicated key!" << endl;
+        */
         return false;
-    }
-    else {
+    } else { //不存在，可以插入
+        snp.pNode->addKey(key, val);
+        //插入后结点满，需要进行调整
+        if (snp.pNode->num == degree) {
+            adjustAfterinsert(snp.pNode);
+        }
         key_num++;
-        snp.pNode->AddKey(key, val);
-        if (snp.pNode->key_num == degree)
-            AdjustAfterInsert(snp.pNode);
         return true;
     }
+
     return false;
 }
 
-template<class T>
-bool BPlusTree<T>::AdjustAfterInsert(Tree node)
+
+//用于插入某key后若结点满，对整棵树进行调整
+template <class T>
+bool BPlusTree<T>::adjustAfterinsert(Tree pNode)
 {
     T key;
-    unsigned int index;
-    Tree parent;
-    Tree newnode = node->SplitNode(key);
+    Tree newNode = pNode->splitNode(key);
     node_num++;
 
-    if (!(node->IsRoot())) {
-        parent = node->parent;
-        index = parent->AddKey(key);
-        parent->children[index + 1] = newnode;
-        newnode->parent = parent;
-
-        if (parent->key_num == degree)
-            return AdjustAfterInsert(parent);
-
-        return true;
-    }
-    else {
-        if (!root) {
-            throw e_exit_command();
-        }
-        else {
-            node_num++;
-            level++;
+    //当前结点为根结点情况
+    if (pNode->isRoot()) {
+        Tree root = new TreeNode<T>(degree, false);
+        if (root == NULL) {
+            /*
+            cout << "Error: can not allocate memory for the new root in adjustAfterinsert" << endl;
+            exit(1);
+            */
+        } else {
+            level ++;
+            node_num ++;
             this->root = root;
-            newnode->parent = node->parent = root;
-            root->AddKey(key);
-            root->children[0] = node;
-            root->children[1] = newnode;
+            pNode->parent = root;
+            newNode->parent = root;
+            root->addKey(key);
+            root->childs[0] = pNode;
+            root->childs[1] = newNode;
             return true;
         }
-        return false;
+    } else { //当前结点非根结点
+        Tree parent = pNode->parent;
+        unsigned int index = parent->addKey(key);
+
+        parent->childs[index+1] = newNode;
+        newNode->parent = parent;
+        //递归进行调整
+        if(parent->num == degree)
+            return adjustAfterinsert(parent);
+
+        return true;
     }
 
     return false;
 }
+
+
 template <class T>
-int BPlusTree<T>::SearchVal(T& key)
+int BPlusTree<T>::searchVal(T& key)
 {
-    if (!root) {
-        throw e_index_not_exist();
+    if (!root)
         return -1;
-    }
-    SearchNodeParse snp;
-    FindToLeaf(root, key, snp);
+    searchNodeParse snp;
+    findToLeaf(root, key, snp);
 
     if (!snp.ifFound)
         return -1;
@@ -585,367 +668,385 @@ int BPlusTree<T>::SearchVal(T& key)
         return snp.pNode->vals[snp.index];
 }
 
+
+
+//输入：key值
+//输出：bool
+//功能：在树中删除一个key值
+//返回是否删除成功
 template <class T>
-bool BPlusTree<T>::DeleteKey(T& key)
+bool BPlusTree<T>::deleteKey(T &key)
 {
-    SearchNodeParse snp;
-    unsigned int index = 0;
-    Tree current_parent;
-    bool if_found;
-
+    searchNodeParse snp;
+    //根结点不存在
     if (!root) {
-        throw e_index_not_exist();
+        /*
+        cout << "ERROR: In deleteKey, no nodes in the tree " << fileName << "!" << endl;
+        */
         return false;
-    }
-    else {
-        FindToLeaf(root, key, snp);
-        if (!snp.ifFound) {
-            throw e_index_not_exist();
+    } else { //正常进行操作
+        //查找位置
+        findToLeaf(root, key, snp);
+        if (!snp.ifFound) { //找不到该key
+            /*
+            cout << "ERROR: In deleteKey, no keys in the tree " << fileName << "!" << endl;
+            */
             return false;
-        }
-        else {
-            if (snp.pNode->IsRoot()) {
+        } else { //正常找到进行删除
+            if (snp.pNode->isRoot()) { //当前为根结点
+                snp.pNode->deleteKeyByIndex(snp.index);
                 key_num--;
-                snp.pNode->DeleteKeyByIndex(snp.index);
-                return AdjustAfterDelete(snp.pNode);
-            }
-            else {
-                if (!snp.index && leaf_head != snp.pNode) {
-                    current_parent = snp.pNode->parent;
-                    if_found = current_parent->FindKey(key, index);
+                return adjustAfterDelete(snp.pNode);
+            } else {
+                if (snp.index == 0 && leafHead != snp.pNode) {
+                    //key存在于枝干结点上
+                    //到上一层去更新枝干层
+                    unsigned int index = 0;
 
-                    while (!if_found) {
-                        if (current_parent->parent)
-                            current_parent = current_parent->parent;
+                    Tree now_parent = snp.pNode->parent;
+                    bool if_found_inBranch = now_parent->findKey(key, index);
+                    while (!if_found_inBranch) {
+                        if(now_parent->parent)
+                            now_parent = now_parent->parent;
                         else
                             break;
-
-                        if_found = current_parent->FindKey(key, index);
+                        if_found_inBranch = now_parent->findKey(key,index);
                     }
 
+                    now_parent -> keys[index] = snp.pNode->keys[1];
+
+                    snp.pNode->deleteKeyByIndex(snp.index);
                     key_num--;
-                    current_parent->keys[index] = snp.pNode->keys[1];
-                    snp.pNode->DeleteKeyByIndex(snp.index);
-                    return AdjustAfterDelete(snp.pNode);
-                }
-                else {
+                    return adjustAfterDelete(snp.pNode);
+
+                } else { //同时必然存在于叶结点
+                    snp.pNode->deleteKeyByIndex(snp.index);
                     key_num--;
-                    snp.pNode->DeleteKeyByIndex(snp.index);
-                    return AdjustAfterDelete(snp.pNode);
+                    return adjustAfterDelete(snp.pNode);
                 }
             }
         }
     }
+
     return false;
 }
 
 
+
+//用于删除某key后可能出现结点空情况，对整棵树进行调整
 template <class T>
-bool BPlusTree<T>::AdjustAfterDelete(Tree node)
+bool BPlusTree<T>::adjustAfterDelete(Tree pNode)
 {
-    unsigned int min_key_num = (degree - 1) / 2;
-    unsigned int index = 0;
+    unsigned int minmumKeyNum = (degree - 1) / 2;
     //三种不需要调整的情况
-    if (((node->isleaf) && (node->key_num >= min_key_num)) ||
-        ((degree != 3) && (!node->isleaf) && (node->key_num >= min_key_num - 1)) ||
-        ((degree == 3) && (!node->isleaf) && (node->key_num < 0))) {
+    if (((pNode->isLeaf) && (pNode->num >= minmumKeyNum)) ||
+        ((degree != 3) && (!pNode->isLeaf) && (pNode->num >= minmumKeyNum - 1)) ||
+        ((degree == 3) && (!pNode->isLeaf) && (pNode->num < 0))) {
         return  true;
-
     }
-
-    if (node->IsRoot()) { //当前结点为根结点
-        if (node->key_num > 0) //不需要调整
+    if (pNode->isRoot()) { //当前结点为根结点
+        if (pNode->num > 0) //不需要调整
             return true;
         else { //正常需要调整
-            if (root->isleaf) { //将成为空树情况
-                delete node;
-                leaf_head = root = NULL;
+            if (root->isLeaf) { //将成为空树情况
+                delete pNode;
+                root = NULL;
+                leafHead = NULL;
                 level--;
                 node_num--;
             }
             else { //根节点将成为左头部
-                root = node->children[0];
-                root->parent = NULL;
-                delete node;
+                root = pNode -> childs[0];
+                root -> parent = NULL;
+                delete pNode;
                 level--;
                 node_num--;
             }
         }
-    }
-    else { //非根节点情况
-        Tree parent = node->parent, brother = NULL;
-        if (node->isleaf) { //当前为叶节点
-            parent->FindKey(node->keys[0], index);
-            //选择左兄弟
-            if ((parent->children[0] != node) && (index + 1 == parent->key_num)) {
-                brother = parent->children[index];
-                if (brother->key_num > min_key_num) {
-                    for (unsigned int i = node->key_num; i > 0; i--) {
-                        node->keys[i] = node->keys[i - 1];
-                        node->vals[i] = node->vals[i - 1];
-                    }
-
-                    node->keys[0] = brother->keys[brother->key_num - 1];
-                    node->vals[0] = brother->vals[brother->key_num - 1];
-                    brother->DeleteKeyByIndex(brother->key_num - 1);
-
-                    node->key_num++;
-                    parent->keys[index] = node->keys[0];
-                    return true;
-                }
-                else {
-                    parent->DeleteKeyByIndex(index);
-
-                    for (unsigned int i = 0; i < node->key_num; i++) {
-                        brother->keys[i + brother->key_num] = node->keys[i];
-                        brother->vals[i + brother->key_num] = node->vals[i];
-                    }
-                    brother->key_num += node->key_num;
-                    brother->next = node->next;
-
-                    delete node;
-                    node_num--;
-
-                    return AdjustAfterDelete(parent);
-                }
-            }
-            else {
-                if (parent->children[0] == node)
-                    brother = parent->children[1];
-                else
-                    brother = parent->children[index + 2];
-                if (brother->key_num > min_key_num) {
-                    node->keys[node->key_num] = brother->keys[0];
-                    node->vals[node->key_num] = brother->vals[0];
-                    node->key_num++;
-                    brother->DeleteKeyByIndex(0);
-                    if (parent->children[0] == node)
-                        parent->keys[0] = brother->keys[0];
-                    else
-                        parent->keys[index + 1] = brother->keys[0];
-                    return true;
-
-                }
-                else {
-                    for (int i = 0; i < brother->key_num; i++) {
-                        node->keys[node->key_num + i] = brother->keys[i];
-                        node->vals[node->key_num + i] = brother->vals[i];
-                    }
-                    if (node == parent->children[0])
-                        parent->DeleteKeyByIndex(0);
-                    else
-                        parent->DeleteKeyByIndex(index + 1);
-                    node->key_num += brother->key_num;
-                    node->next = brother->next;
-
-                    delete brother;
-                    node_num--;
-
-                    return AdjustAfterDelete(parent);
-                }
-            }
-
-        }
-        else { //枝干节点情况
+    } else { //非根节点情况
+        Tree parent = pNode->parent, brother = NULL;
+        if (pNode->isLeaf) { //当前为叶节点
             unsigned int index = 0;
-            parent->FindKey(node->children[0]->keys[0], index);
-            if ((parent->children[0] != node) && (index + 1 == parent->key_num)) {
-                brother = parent->children[index];
-                if (brother->key_num > min_key_num - 1) {
-                    node->children[node->key_num + 1] = node->children[node->key_num];
-                    for (unsigned int i = node->key_num; i > 0; i--) {
-                        node->children[i] = node->children[i - 1];
-                        node->keys[i] = node->keys[i - 1];
+            parent->findKey(pNode->keys[0], index);
+
+            //选择左兄弟
+            if ((parent->childs[0] != pNode) && (index + 1 == parent->num)) {
+                brother = parent->childs[index];
+                if(brother->num > minmumKeyNum) {
+                    for (unsigned int i = pNode->num; i > 0; i--) {
+                        pNode->keys[i] = pNode->keys[i-1];
+                        pNode->vals[i] = pNode->vals[i-1];
                     }
-                    node->children[0] = brother->children[brother->key_num];
-                    node->keys[0] = parent->keys[index];
-                    node->key_num++;
-                    parent->keys[index] = brother->keys[brother->key_num - 1];
+                    pNode->keys[0] = brother->keys[brother->num-1];
+                    pNode->vals[0] = brother->vals[brother->num-1];
+                    brother->deleteKeyByIndex(brother->num-1);
 
-                    if (brother->children[brother->key_num])
-                        brother->children[brother->key_num]->parent = node;
-                    brother->DeleteKeyByIndex(brother->key_num - 1);
-
+                    pNode->num++;
+                    parent->keys[index] = pNode->keys[0];
                     return true;
 
-                }
-                else {
-                    brother->key_num++;
-                    brother->keys[brother->key_num] = parent->keys[index];
-                    parent->DeleteKeyByIndex(index);
+                } else {
+                    parent->deleteKeyByIndex(index);
 
-                    for (unsigned int i = 0; i < node->key_num; i++) {
-                        brother->children[brother->key_num + i] = node->children[i];
-                        brother->keys[brother->key_num + i] = node->keys[i];
-                        brother->children[brother->key_num + i]->parent = brother;
+                    for (int i = 0; i < pNode->num; i++) {
+                        brother->keys[i+brother->num] = pNode->keys[i];
+                        brother->vals[i+brother->num] = pNode->vals[i];
                     }
-                    brother->children[brother->key_num + node->key_num] = node->children[node->key_num];
-                    brother->children[brother->key_num + node->key_num]->parent = brother;
+                    brother->num += pNode->num;
+                    brother->nextLeafNode = pNode->nextLeafNode;
 
-                    brother->key_num += node->key_num;
-
-                    delete node;
+                    delete pNode;
                     node_num--;
 
-                    return AdjustAfterDelete(parent);
+                    return adjustAfterDelete(parent);
                 }
 
-            }
-            else {
-                if (parent->children[0] == node)
-                    brother = parent->children[1];
+            } else {
+                if(parent->childs[0] == pNode)
+                    brother = parent->childs[1];
                 else
-                    brother = parent->children[index + 2];
-                if (brother->key_num > min_key_num - 1) {
-
-                    node->children[node->key_num + 1] = brother->children[0];
-                    node->keys[node->key_num] = brother->keys[0];
-                    node->children[node->key_num + 1]->parent = node;
-                    node->key_num++;
-
-                    if (node == parent->children[0])
+                    brother = parent->childs[index+2];
+                if(brother->num > minmumKeyNum) {
+                    pNode->keys[pNode->num] = brother->keys[0];
+                    pNode->vals[pNode->num] = brother->vals[0];
+                    pNode->num++;
+                    brother->deleteKeyByIndex(0);
+                    if(parent->childs[0] == pNode)
                         parent->keys[0] = brother->keys[0];
                     else
-                        parent->keys[index + 1] = brother->keys[0];
+                        parent->keys[index+1] = brother->keys[0];
+                    return true;
 
-                    brother->children[0] = brother->children[1];
-                    brother->DeleteKeyByIndex(0);
+                } else {
+                    for (int i = 0; i < brother->num; i++) {
+                        pNode->keys[pNode->num+i] = brother->keys[i];
+                        pNode->vals[pNode->num+i] = brother->vals[i];
+                    }
+                    if (pNode == parent->childs[0])
+                        parent->deleteKeyByIndex(0);
+                    else
+                        parent->deleteKeyByIndex(index+1);
+                    pNode->num += brother->num;
+                    pNode->nextLeafNode = brother->nextLeafNode;
+                    delete brother;
+                    node_num--;
+
+                    return adjustAfterDelete(parent);
+                }
+            }
+
+        } else { //枝干节点情况
+            unsigned int index = 0;
+            parent->findKey(pNode->childs[0]->keys[0], index);
+            if ((parent->childs[0] != pNode) && (index + 1 == parent->num)) {
+                brother = parent->childs[index];
+                if (brother->num > minmumKeyNum - 1) {
+                    pNode->childs[pNode->num+1] = pNode->childs[pNode->num];
+                    for (unsigned int i = pNode->num; i > 0; i--) {
+                        pNode->childs[i] = pNode->childs[i-1];
+                        pNode->keys[i] = pNode->keys[i-1];
+                    }
+                    pNode->childs[0] = brother->childs[brother->num];
+                    pNode->keys[0] = parent->keys[index];
+                    pNode->num++;
+
+                    parent->keys[index]= brother->keys[brother->num-1];
+
+                    if (brother->childs[brother->num])
+                        brother->childs[brother->num]->parent = pNode;
+                    brother->deleteKeyByIndex(brother->num-1);
 
                     return true;
-                }
-                else {
 
-                    node->keys[node->key_num] = parent->keys[index];
+                } else {
+                    brother->keys[brother->num] = parent->keys[index];
+                    parent->deleteKeyByIndex(index);
+                    brother->num++;
 
-                    if (node == parent->children[0])
-                        parent->DeleteKeyByIndex(0);
-                    else
-                        parent->DeleteKeyByIndex(index + 1);
-
-                    node->key_num++;
-
-                    for (unsigned int i = 0; i < brother->key_num; i++) {
-                        node->children[node->key_num + i] = brother->children[i];
-                        node->keys[node->key_num + i] = brother->keys[i];
-                        node->children[node->key_num + i]->parent = node;
+                    for (int i = 0; i < pNode->num; i++) {
+                        brother->childs[brother->num+i] = pNode->childs[i];
+                        brother->keys[brother->num+i] = pNode->keys[i];
+                        brother->childs[brother->num+i]-> parent= brother;
                     }
-                    node->children[node->key_num + brother->key_num] = brother->children[brother->key_num];
-                    node->children[node->key_num + brother->key_num]->parent = node;
+                    brother->childs[brother->num+pNode->num] = pNode->childs[pNode->num];
+                    brother->childs[brother->num+pNode->num]->parent = brother;
 
-                    node->key_num += brother->key_num;
+                    brother->num += pNode->num;
+
+                    delete pNode;
+                    node_num --;
+
+                    return adjustAfterDelete(parent);
+                }
+
+            } else {
+                if (parent->childs[0] == pNode)
+                    brother = parent->childs[1];
+                else
+                    brother = parent->childs[index+2];
+                if (brother->num > minmumKeyNum - 1) {
+
+                    pNode->childs[pNode->num+1] = brother->childs[0];
+                    pNode->keys[pNode->num] = brother->keys[0];
+                    pNode->childs[pNode->num+1]->parent = pNode;
+                    pNode->num++;
+
+                    if (pNode == parent->childs[0])
+                        parent->keys[0] = brother->keys[0];
+                    else
+                        parent->keys[index+1] = brother->keys[0];
+
+                    brother->childs[0] = brother->childs[1];
+                    brother->deleteKeyByIndex(0);
+
+                    return true;
+                } else {
+
+                    pNode->keys[pNode->num] = parent->keys[index];
+
+                    if(pNode == parent->childs[0])
+                        parent->deleteKeyByIndex(0);
+                    else
+                        parent->deleteKeyByIndex(index+1);
+
+                    pNode->num++;
+
+                    for (int i = 0; i < brother->num; i++) {
+                        pNode->childs[pNode->num+i] = brother->childs[i];
+                        pNode->keys[pNode->num+i] = brother->keys[i];
+                        pNode->childs[pNode->num+i]->parent = pNode;
+                    }
+                    pNode->childs[pNode->num+brother->num] = brother->childs[brother->num];
+                    pNode->childs[pNode->num+brother->num]->parent = pNode;
+
+                    pNode->num += brother->num;
 
                     delete brother;
                     node_num--;
 
-                    return AdjustAfterDelete(parent);
+                    return adjustAfterDelete(parent);
                 }
+
             }
+
         }
+
     }
+
     return false;
 }
 
+
+//输入：树的根结点
+//功能：删除整棵树并释放内存空间，主要用在析构函数中
 template <class T>
-void BPlusTree<T>::DropTree(Tree node)
+void BPlusTree<T>::dropTree(Tree node)
 {
+    //空树
     if (!node)
         return;
-    if (!node->isleaf)
-        for (unsigned int i = 0; i <= node->key_num; i++) {
-            DropTree(node->children[i]);
-            node->children[i] = NULL;
+    //非叶节点
+    if (!node->isLeaf) {
+        for(unsigned int i = 0; i <= node->num; i++) {
+            dropTree(node->childs[i]);
+            node->childs[i] = NULL;
         }
-
-    delete  node;
+    }
+    delete node;
     node_num--;
+    return;
 }
 
+
+//输入：key1，key2，返回vals的容器
+//功能：返回范围搜索结果，将value放入vals容器中
 template <class T>
-void BPlusTree<T>::SearchRange(T& key1, T& key2, vector<int>& vals, int flag)
+void BPlusTree<T>::searchRange(T& key1, T& key2, std::vector<int>& vals, int flag)
 {
+    //空树
     if (!root)
         return;
+
     if (flag == 2) {
-        SearchNodeParse snp1;
-        FindToLeaf(root, key1, snp1);
+        searchNodeParse snp1;
+        findToLeaf(root, key1, snp1);
 
         bool finished = false;
-        Tree node = snp1.pNode;
+        Tree pNode = snp1.pNode;
         unsigned int index = snp1.index;
 
         do {
-            finished = node->FindLower(index, vals);
+            finished = pNode->findRange2(index, vals);
             index = 0;
-            if (!(node->next))
+            if (pNode->nextLeafNode == NULL)
                 break;
             else
-                node = node->nextLeaf();
+                pNode = pNode->nextLeaf();
         } while (!finished);
-    }
-    else if (flag == 1) {
-        SearchNodeParse snp2;
-        FindToLeaf(root, key2, snp2);
+    } else if (flag == 1) {
+        searchNodeParse snp2;
+        findToLeaf(root, key2, snp2);
 
         bool finished = false;
-        Tree node = snp2.pNode;
-        unsigned  int index = snp2.index;
+        Tree pNode = snp2.pNode;
+        unsigned int index = snp2.index;
 
         do {
-            finished = node->FindLower(index, vals);
+            finished = pNode->findRange2(index, vals);
             index = 0;
-            if (!(node->next))
+            if (pNode->nextLeafNode == NULL)
                 break;
             else
-                node = node->nextLeaf();
+                pNode = pNode->nextLeaf();
         } while (!finished);
-    }
-    else {
-        SearchNodeParse snp1, snp2;
-        FindToLeaf(root, key1, snp1);
-        FindToLeaf(root, key2, snp2);
+    } else {
+        searchNodeParse snp1, snp2;
+        findToLeaf(root, key1, snp1);
+        findToLeaf(root, key2, snp2);
         bool finished = false;
         unsigned int index;
-        if (key1 > key2) {
-            Tree node = snp2.pNode;
-            index = snp2.index;
 
-            do {
-                finished = node->FindHigher(index, key1, vals);
-                index = 0;
-                if (!(node->next))
-                    break;
-                else
-                    node = node->nextLeaf();
-            } while (!finished);
-        }
-        else {
-            Tree node = snp1.pNode;
+        if (key1 <= key2) {
+            Tree pNode = snp1.pNode;
             index = snp1.index;
-
             do {
-                finished = node->FindHigher(index, key2, vals);
+                finished = pNode->findRange(index, key2, vals);
                 index = 0;
-                if (!(node->next))
+                if (pNode->nextLeafNode == NULL)
                     break;
                 else
-                    node = node->nextLeaf();
+                    pNode = pNode->nextLeaf();
+            } while (!finished);
+        } else {
+            Tree pNode = snp2.pNode;
+            index = snp2.index;
+            do {
+                finished = pNode->findRange(index, key1, vals);
+                index = 0;
+                if (pNode->nextLeafNode == NULL)
+                    break;
+                else
+                    pNode = pNode->nextLeaf();
             } while (!finished);
         }
     }
-    //排序并去除所有重复元素
-    sort(vals.begin(), vals.end());
+    //}
+
+    std::sort(vals.begin(),vals.end());
     vals.erase(unique(vals.begin(), vals.end()), vals.end());
+    return;
 }
 
+
 template <class T>
-void BPlusTree<T>::GetFile(string fname)
+void BPlusTree<T>::getFile(std::string fname)
 {
     FILE* fp = fopen(fname.c_str(), "w");
     fclose(fp);
 }
 
 template <class T>
-int BPlusTree<T>::GetBlockNum(string table_name)
+int BPlusTree<T>::getBlockNum(std::string table_name)
 {
     char* p;
     int block_num = -1;
@@ -957,12 +1058,12 @@ int BPlusTree<T>::GetBlockNum(string table_name)
 }
 
 template <class T>
-void BPlusTree<T>::ReadFromDiskAll()
+void BPlusTree<T>::readFromDiskAll()
 {
-    string fname = file_name;
+    std::string fname = file_name;
     //string fname = file_name;
 //    GetFile(fname);
-    int block_num = GetBlockNum(fname);
+    int block_num = getBlockNum(fname);
 
     if (block_num <= 0)
         block_num = 1;
@@ -973,12 +1074,12 @@ void BPlusTree<T>::ReadFromDiskAll()
         //char* t = p;
         //遍历块中所有记录
 
-        ReadFromDisk(p, p + PAGESIZE);
+        readFromDisk(p, p + PAGESIZE);
     }
 }
 
 template <class T>
-void BPlusTree<T>::ReadFromDisk(char* p, char* end)
+void BPlusTree<T>::readFromDisk(char* p, char* end)
 {
     T key;
     int j, value;
@@ -993,8 +1094,8 @@ void BPlusTree<T>::ReadFromDisk(char* p, char* end)
             for (j = 0; i < PAGESIZE && p[i] != ' '; i++)
                 temp[j++] = p[i];
             temp[j] = '\0';
-            string s(temp);
-            stringstream stream(s);
+            std::string s(temp);
+            std::stringstream stream(s);
             stream >> key;
 
             memset(temp, 0, sizeof(temp));
@@ -1003,72 +1104,110 @@ void BPlusTree<T>::ReadFromDisk(char* p, char* end)
             for (j = 0; i < PAGESIZE && p[i] != ' '; i++)
                 temp[j++] = p[i];
             temp[j] = '\0';
-            string s1(temp);
-            stringstream stream1(s1);
+            std::string s1(temp);
+            std::stringstream stream1(s1);
             stream1 >> value;
-
-            InsertKey(key, value);
+            
+            insertKey(key, value);
         }
 }
 
 
+//template <class T>
+//void BPlusTree<T>::writtenbackToDiskAll()
+//{
+//    int i, j, block_num, offset, page_id;
+//    std::string fname = file_name;
+//    FILE *f = fopen(fname.c_str(), "r");
+//    if(f==NULL) fname="./database/index/"+file_name;
+//    fclose(f);
+//    //string fname = file_name;
+//    //GetFile(fname);
+//    block_num = getBlockNum(fname);
+//
+//    Tree ntmp = leafHead;
+//
+//    j = 0;
+//    char* p = buf_manager.getPage(fname, j);
+//    offset = 0;
+//    memset(p, 0, PAGESIZE);
+//    for ( i = 0; ntmp != NULL;) {
+//        for (i = 0; i < ntmp->num; i++) {
+//            if(ntmp->vals[i]!=j){
+//                while(offset<PAGESIZE) p[offset++]=' ';
+//                page_id = buf_manager.getPageId(fname, j);
+//                buf_manager.modifyPage(page_id);
+//                j++;
+//                p = buf_manager.getPage(fname, j);
+//                offset = 0;
+//                memset(p, 0, PAGESIZE);
+//            }
+//
+//            p[offset++] = '#';
+//            p[offset++] = ' ';
+//
+//            copyString(p, offset, ntmp->keys[i]);
+//            p[offset++] = ' ';
+//            copyString(p, offset, ntmp->vals[i]);
+//            p[offset++] = ' ';
+//        }
+//
+//
+//        ntmp = ntmp->nextLeafNode;
+//    }
+//
+//    p[offset] = '\0';
+//    page_id = buf_manager.getPageId(fname, j);
+//    buf_manager.modifyPage(page_id);
+//    j++;
+//    while (j < block_num) {
+//        char* p = buf_manager.getPage(fname, j);
+//        memset(p, 0, PAGESIZE);
+//
+//        int page_id = buf_manager.getPageId(fname, j);
+//        buf_manager.modifyPage(page_id);
+//
+//        j++;
+//    }
+//}
+
 template <class T>
-void BPlusTree<T>::WrittenBackToDiskAll()
+void BPlusTree<T>::writtenbackToDiskAll()
 {
-    int i, j, block_num, offset, page_id;
     std::string fname = file_name;
+    //std::string fname = file_name;
     FILE *f = fopen(fname.c_str(), "r");
     if(f==NULL) fname="./database/index/"+file_name;
     fclose(f);
-    //string fname = file_name;
-    //GetFile(fname);
-    block_num = GetBlockNum(fname);
+    int block_num = getBlockNum(fname);
 
-    Tree ntmp = leaf_head;
-
-    j = 0;
-    char* p = buf_manager.getPage(fname, j);
-    offset = 0;
-    memset(p, 0, PAGESIZE);
-    int count=-1;
-    for ( i = 0; ntmp != NULL;) {
-        count++;
-        for (i = 0; i < ntmp->key_num; i++) {
-            if(count!=0&&i==0) continue;
-            std::stringstream stream1;
-            stream1 << ntmp->keys[i];
-            std::string s1 = stream1.str();
-
-            std::stringstream stream2;
-            stream2 << ntmp->vals[i];
-            std::string s2 = stream2.str();
-            if(offset+4+s1.length()+s2.length()>=PAGESIZE){
-                while(offset<PAGESIZE) p[offset++]=' ';
-                page_id = buf_manager.getPageId(fname, j);
-                buf_manager.modifyPage(page_id);
-                j++;
-                p = buf_manager.getPage(fname, j);
-                offset = 0;
-                memset(p, 0, PAGESIZE);
-            }
-
+    Tree ntmp = leafHead;
+    int i, j;
+    
+    for (j = 0, i = 0; ntmp != NULL; j++) {
+        char* p = buf_manager.getPage(fname, j);
+        int offset = 0;
+        
+        memset(p, 0, PAGESIZE);
+        
+        for (i = 0; i < ntmp->num; i++) {
             p[offset++] = '#';
             p[offset++] = ' ';
-
+            
             copyString(p, offset, ntmp->keys[i]);
             p[offset++] = ' ';
             copyString(p, offset, ntmp->vals[i]);
             p[offset++] = ' ';
         }
+        
+        p[offset] = '\0';
 
-
-        ntmp = ntmp->next;
+        int page_id = buf_manager.getPageId(fname, j);
+        buf_manager.modifyPage(page_id);
+        
+        ntmp = ntmp->nextLeafNode;
     }
 
-    p[offset] = '\0';
-    page_id = buf_manager.getPageId(fname, j);
-    buf_manager.modifyPage(page_id);
-    j++;
     while (j < block_num) {
         char* p = buf_manager.getPage(fname, j);
         memset(p, 0, PAGESIZE);
@@ -1078,14 +1217,16 @@ void BPlusTree<T>::WrittenBackToDiskAll()
 
         j++;
     }
+
+    return;
+
 }
 
 
-
 template <class T>
-void BPlusTree<T>::PrintLeaf()
+void BPlusTree<T>::printleaf()
 {
-    Tree p = leaf_head;
+    Tree p = leafHead;
     while (p != NULL) {
         p->PrintList();
         p = p->nextLeaf();
@@ -1093,30 +1234,30 @@ void BPlusTree<T>::PrintLeaf()
 }
 
 template <class T>
-void TreeNode<T>::PrintList()
+void TreeNode<T>::printl()
 {
-    for (int i = 0; i < key_num; i++)
-        cout << "->" << keys[i];
-    cout << endl;
+    for (int i = 0; i < num; i++)
+        std::cout << "->" << keys[i];
+    std::cout << std::endl;
 }
 
-template <class T>
-string BPlusTree<T>::findTableName(data index)
-{
-    if (index.type == TYPE_INT) {
-        if (this->SearchVal(index.int_data) != -1)
-            return file_name;
-    }
-    else if (index.type == TYPE_FLOAT) {
-        if (this->SearchVal(index.float_data) != -1)
-            return file_name;
-    }
-    else {
-        if (this->SearchVal(index.char_data) != -1)
-            return file_name;
-    }
-    string default_ = "error!";
-    return default_;
-}
+//template <class T>
+//string BPlusTree<T>::findTableName(data index)
+//{
+//    if (index.type == TYPE_INT) {
+//        if (this->SearchVal(index.int_data) != -1)
+//            return file_name;
+//    }
+//    else if (index.type == TYPE_FLOAT) {
+//        if (this->SearchVal(index.float_data) != -1)
+//            return file_name;
+//    }
+//    else {
+//        if (this->SearchVal(index.char_data) != -1)
+//            return file_name;
+//    }
+//    string default_ = "error!";
+//    return default_;
+//}
 
 #endif //MINISQL_BPLUSTREE_H

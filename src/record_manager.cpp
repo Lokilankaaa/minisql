@@ -3,8 +3,9 @@
 //
 
 #include "record_manager.h"
+#include <iostream>
 
-
+extern map<string, IndexManager*> im_map;
 //获取该文件一共有多少个block
 int RecordManager::countBlockNum(const std::string &table_name){
     char *p;
@@ -66,7 +67,10 @@ int RecordManager::getTupleLength(char* p){
 
 //带索引查找满足条件的块,结果保存在传入的allBlockId
 void RecordManager::searchBlockWithIndex(std::string table_name, std::string target_attr, Constraint target_cons, std::vector<int> &allBlockId, std::string index_name, int theType){
-    IndexManager im(table_name);
+    if(im_map.count(table_name) == 0){
+        auto t = new IndexManager(table_name);
+        im_map.insert(std::pair<string, IndexManager*>(table_name, t));
+    }
     data temp_data;
     std::string temp_path = "INDEX_FILE_"+target_attr+"_"+table_name+"_"+index_name+"_"+num2str(theType);
     if(target_cons.conSymbol==MORE || target_cons.conSymbol==MORE_OR_EQUAL){
@@ -81,7 +85,7 @@ void RecordManager::searchBlockWithIndex(std::string table_name, std::string tar
         else{
             temp_data.type = -2;
         }
-        im.SearchRange(temp_path, target_cons.conData, temp_data, allBlockId);
+        im_map[table_name]->SearchRange(temp_path, target_cons.conData, temp_data, allBlockId);
     }
     else if(target_cons.conSymbol==LESS || target_cons.conSymbol==LESS_OR_EQUAL){
         if(target_cons.conData.type==-1){
@@ -96,10 +100,10 @@ void RecordManager::searchBlockWithIndex(std::string table_name, std::string tar
             temp_data.type = 1;
             temp_data.char_data="";
         }
-        im.SearchRange(temp_path, temp_data, target_cons.conData, allBlockId);
+        im_map[table_name]->SearchRange(temp_path, temp_data, target_cons.conData, allBlockId);
     }
     else{
-        im.SearchRange(temp_path, target_cons.conData, target_cons.conData, allBlockId);
+        im_map[table_name]->SearchRange(temp_path, target_cons.conData, target_cons.conData, allBlockId);
     }
 }
 
@@ -241,9 +245,8 @@ int RecordManager::deleteRecordAccordCons(std::string table_name, int block_id, 
             //代表满足条件
             //删除对应的索引
             std::vector<data> allTempData = tuple.getData();
-
             for(int ii=0; ii<indexindex.size(); ii++){
-                if(indexindex[ii] == -1) continue;
+                if(indexindex[ii]==-1) continue;
                 std::string theName = target_attr.name[allIndex.location[indexindex[ii]]];
                 std::string theIndexName = allIndex.name[indexindex[ii]];
                 int theType = target_attr.type[allIndex.location[indexindex[ii]]];
@@ -408,6 +411,8 @@ table RecordManager::selectRecord(std::string table_name, std::string target_att
 //输入：(表名,要插入的记录TUPLE)
 //输出：void
 void RecordManager::insertRecord(std::string table_name, TUPLE& tuple){
+    static int allcount=0;
+    std::cout<<allcount++;
     std::string temp_path = DATA_FILE_PATH + table_name;
     catalog_manager cate;
     attributes_set allAttr = cate.getAllattrs(table_name);
@@ -484,16 +489,18 @@ void RecordManager::insertRecord(std::string table_name, TUPLE& tuple){
         int page_id = buf_manager.getPageId(temp_path, which_block);
         buf_manager.modifyPage(page_id);
     }
-
+    
     //最后还需要更新一下索引
-    IndexManager im(table_name);
+    if(im_map.count(table_name) == 0){
+        auto t = new IndexManager(table_name);
+        im_map.insert(std::pair<string, IndexManager*>(table_name, t));
+    }
     for(int i=0; i<allAttr.num; i++){
         for(int j=0; j<allIndex.num; j++){
             if(i==allIndex.location[j]){
                 std::string theName = allAttr.name[i];
                 std::string thePath = "INDEX_FILE_"+theName+"_"+table_name+"_"+allIndex.name[j]+"_"+num2str(allAttr.type[allIndex.location[j]]);
-//                std::cout << values[i].int_data<<std::endl;
-                im.InsertIndex(thePath, values[i], which_block);
+                im_map[table_name]->InsertIndex(thePath, values[i], which_block);
             }
         }
     }
@@ -512,7 +519,10 @@ int RecordManager::deleteRecord(std::string table_name){
     catalog_manager cate;
     attributes_set allAttr = cate.getAllattrs(table_name);
     Index allIndex = cate.getAllindex(table_name);
-    IndexManager im(table_name);
+    if(im_map.count(table_name) == 0) {
+        auto t = new IndexManager(table_name);
+        im_map.insert(std::pair<string, IndexManager*>(table_name, t));
+    }
     int count = 0;
     for(int i=0; i<count_block; i++){
         //获取每一块
@@ -529,10 +539,10 @@ int RecordManager::deleteRecord(std::string table_name){
                 for(int k=0; k<allIndex.num; k++){
                     if(allIndex.location[k]==j){
                         //如果有索引的话
-                        std::string theName = allAttr.name[i];
-                        std::string thePath = "INDEX_FILE_"+theName+"_"+table_name+"_"+allIndex.name[k]+"_"+num2str(allAttr.type[allIndex.location[j]]);
+                        std::string theName = allAttr.name[j];
+                        std::string thePath = "INDEX_FILE_"+theName+"_"+table_name+"_"+allIndex.name[k]+"_"+num2str(allAttr.type[allIndex.location[k]]);
                         std::vector<data> allData = tuple.getData();
-                        im.DeleteIndexByKey(thePath, allData[j]);
+                        im_map[table_name]->DeleteIndexByKey(thePath, allData[j]);
                     }
                 }
             }
@@ -594,7 +604,6 @@ void RecordManager::createIndex(IndexManager &index_manager, std::string table_n
             p = p + getTupleLength(p);
         }
     }
-//    int a = 0;
 }
 
 //功能带有多个条件的删除，删除满足vector<Constraint>所有条件的记录
@@ -606,7 +615,10 @@ int RecordManager::deleteRecord(std::string table_name, std::vector<std::string>
     catalog_manager cate;
     attributes_set allAttr = cate.getAllattrs(table_name);
     Index allIndex = cate.getAllindex(table_name);
-    IndexManager im(table_name);
+    if(im_map.count(table_name) == 0) {
+        auto t = new IndexManager(table_name);
+        im_map.insert(std::pair<string, IndexManager*>(table_name, t));
+    }
     //构建表示目标属性下标和是否有索引的vector容器
     std::vector<int> index;
     std::vector<int> indexindex;
@@ -657,6 +669,11 @@ int RecordManager::deleteRecord(std::string table_name, std::vector<std::string>
                 std::vector<int> tempFinal;
                 std::vector<int> block_ids;
                 searchBlockWithIndex(table_name, target_attr[i], target_cons[i], block_ids, allIndex.name[indexindex[i]], allAttr.type[allIndex.location[indexindex[i]]]);
+                if(finalAll.size()==0){
+                    for(auto fi=block_ids.begin(); fi!=block_ids.end();fi++){
+                        finalAll.push_back(*fi);
+                    }
+                }
                 std::sort(finalAll.begin(), finalAll.end());
                 std::sort(block_ids.begin(), block_ids.end());
                 std::set_intersection(finalAll.begin(),finalAll.end(),block_ids.begin(),block_ids.end(), std::back_inserter(tempFinal));
@@ -667,7 +684,7 @@ int RecordManager::deleteRecord(std::string table_name, std::vector<std::string>
             }
         }
         for(auto i=finalAll.begin(); i!=finalAll.end(); i++){
-            count += deleteRecordAccordCons(table_name, *i, allAttr, index, target_cons, indexindex, allIndex, im);
+            count += deleteRecordAccordCons(table_name, *i, allAttr, index, target_cons, indexindex, allIndex, *im_map[table_name]);
         }
     }
     else{
@@ -675,7 +692,7 @@ int RecordManager::deleteRecord(std::string table_name, std::vector<std::string>
         int block_num = countBlockNum(temp_path);
         if(block_num==0) return 0;
         for(int i=0; i<block_num; i++){
-            count += deleteRecordAccordCons(table_name, i, allAttr, index, target_cons, indexindex, allIndex, im);
+            count += deleteRecordAccordCons(table_name, i, allAttr, index, target_cons, indexindex, allIndex, *im_map[table_name]);
         }
     }
     return count;

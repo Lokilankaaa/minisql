@@ -10,6 +10,8 @@
 #include "error.h"
 #include <vector>
 
+extern map<string, IndexManager*> im_map;
+
 void Interpreter::get_script() {
     std::string tmp;
     script.clear();
@@ -93,6 +95,9 @@ void Interpreter::execute() {
 
     catch (const e_exit_command &e) {
         std::cout << "minisql > Bye!" << std::endl;
+        for(auto &i:im_map) {
+            delete i.second;
+        }
         exit(0);
     }
 
@@ -113,11 +118,11 @@ void Interpreter::execute() {
     }
 
     catch (const e_index_exist &e) {
-        std::cout << "minisql > ERROR! The index existed." << std::endl;
+        std::cout << "minisql > ERROR! The index has existed." << std::endl;
     }
 
     catch (const e_index_not_exist &e) {
-        std::cout << "minisql > ERROR! The index doesn't exist." << std::endl;
+        std::cout << "minisql > ERROR! The index doesn't existed." << std::endl;
     }
 
     catch (const e_index_full &e) {

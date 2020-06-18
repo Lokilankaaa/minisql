@@ -19,7 +19,7 @@
 
 //最大页数为100，用于默认构造函数
 #define MAXFRAMESIZE 100
-#define MAXPAGESIZE 8192
+#define MAXPAGESIZE 4096
 
 #include "buffer_manager_page.h"
 #include <string>
@@ -55,7 +55,6 @@ private:
     int getEmptyPageId();
     //将对应文件的对应块载入对应的内存页，文件不存在返回-1，否则返回1
     int loadDiskBlock(int page_id , std::string file_name , int block_id);
-
 };
 
 

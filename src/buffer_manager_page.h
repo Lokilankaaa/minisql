@@ -12,7 +12,7 @@
 
 
 //定义每一页的大小为4096字节，即4KB
-#define PAGESIZE 8192
+#define PAGESIZE 4096
 
 
 #include <iostream>

@@ -4,6 +4,9 @@
 
 #include "API.h"
 
+
+extern map<string, IndexManager*> im_map;
+
 int API::check_type(std::string &val) {
     if (val[0] == '\'' and val[val.size() - 1] == '\'')
         return static_cast<int>(val.size()) - 2;
@@ -35,8 +38,9 @@ CONSTRAINT API::check_cons(std::string &str) {
 Error API::create_table(std::string &table_name, attributes_set &attrs, Index &index, int pk) {
     if (catalog_manager::createtable(table_name, attrs, index, pk) == successful) {
         rec_manager.createTableFile(table_name);
-        create_index(attrs.name[attrs.primary_key] + "pk", table_name, attrs.name[attrs.primary_key]);
-    } else
+        create_index(attrs.name[attrs.primary_key]+"pk", table_name, attrs.name[attrs.primary_key]);
+    }
+    else
         return table_exist;
     return successful;
 }
@@ -78,9 +82,12 @@ Error API::insert_table(std::string &table_name, std::vector<std::string> &value
 
 Error API::create_index(std::string index_name, std::string &table_name, std::string &column_name) {
     if (catalog_manager::createindex(table_name, column_name, index_name) == successful) {
-        if (!catalog_manager::check_unique(table_name, column_name))
-            throw e_index_define_error();
-        IndexManager idx_manager(table_name);
+//        if (!catalog_manager::check_unique(table_name, column_name))
+//            throw e_index_define_error();
+        if(im_map.count(table_name) == 0) {
+            auto t = new IndexManager(table_name);
+            im_map.insert(std::pair<string, IndexManager*>(table_name, t));
+        }
 
         int type;
         auto attrs = catalog_manager::getAllattrs(table_name);
@@ -92,8 +99,8 @@ Error API::create_index(std::string index_name, std::string &table_name, std::st
         }
         std::string idx_file_path =
                 "INDEX_FILE_" + column_name + "_" + table_name + "_" + index_name + "_" + num2str(type);
-        idx_manager.CreateIndex(idx_file_path, type);
-        rec_manager.createIndex(idx_manager, table_name, column_name, index_name, type);
+        im_map[table_name]->CreateIndex(idx_file_path, type);
+        rec_manager.createIndex(*im_map[table_name], table_name, column_name, index_name, type);
         return successful;
     } else {
         throw e_attribute_not_exist();
@@ -108,6 +115,8 @@ Error API::drop_index(std::string &index_name) {
     file_path = split(file_path, '/').back();
     catalog_manager::dropindex(table_name, index_name);
 //    IndexManager idx_manager(table_name);
+    if(im_map.count(table_name) != 0)
+        im_map[table_name]->DropIndex(file_path, type);
     IndexManager::DropIndex(file_path, type);
     return successful;
 }
@@ -137,6 +146,7 @@ int API::delete_table(std::string &table_name, std::vector<std::string> &conditi
             target_cons.push_back(tmp_con);
         }
         return rec_manager.deleteRecord(table_name, target_attr, target_cons);
+        
     }
 }
 
@@ -173,7 +183,7 @@ table API::select(std::vector<std::string> &attrs, std::vector<std::string> &tab
                 } else if (!tmp_data.type) {
                     tmp_data.float_data = str2num<float>(res[2]);
                 } else {
-                    tmp_data.char_data = res[2].substr(1, res[2].size() - 2);
+                    tmp_data.char_data = res[2].substr(1, res[2].size()-2);
                 }
                 tmp_con.conData = tmp_data, tmp_con.conSymbol = check_cons(res[1]);
                 auto t = rec_manager.selectRecord(tables[0], res[0], tmp_con);

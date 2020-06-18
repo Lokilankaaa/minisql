@@ -185,6 +185,9 @@ Error catalog_manager::createindex(std::string &table_name, std::string &attr_na
     auto index = getAllindex(table_name);
     if (index.num == 10)
         throw e_index_full();
+    
+    if (!check_unique(table_name, attr_name))
+        throw e_index_define_error();
 
     auto attrs = getAllattrs(table_name);
     for (int i = 0; i < index.num; ++i) {

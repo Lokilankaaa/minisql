@@ -30,6 +30,7 @@ void listDir(char *path, std::vector<std::string> *files) {
         sprintf(filepath, "%s/%s", path, entry->d_name);
         files->push_back(filepath);
     }
+    closedir(directory_pointer);
 }
 
 IndexManager::IndexManager(string &table_name) {
@@ -70,6 +71,7 @@ IndexManager::IndexManager(string &table_name) {
 //    } while (!_findnext(handle, &fileinfo));
 //    _findclose(handle);
     for (auto &i:files) {
+        if(split(i, '_')[0]!="./database/index/INDEX") continue;
         auto tmp = split(i, '_')[split(i, '_').size() - 3];
         if (tmp == table_name) {
             auto x = split(i, '_').back();
@@ -101,26 +103,26 @@ IndexManager::IndexManager(string &table_name) {
 IndexManager::~IndexManager() {
     for (auto &itInt : IntMap_Index) {
         if (itInt.second) {
-            itInt.second->WrittenBackToDiskAll();
+            itInt.second->writtenbackToDiskAll();
             delete itInt.second;
         }
     }
     for (auto &itString : StringMap_Index) {
         if (itString.second) {
-            itString.second->WrittenBackToDiskAll();
+            itString.second->writtenbackToDiskAll();
             delete itString.second;
         }
     }
     for (auto &itFloat : FloatMap_Index) {
         if (itFloat.second) {
-            itFloat.second->WrittenBackToDiskAll();
+            itFloat.second->writtenbackToDiskAll();
             delete itFloat.second;
         }
     }
 }
 
 int IndexManager::GetDegree(int type) {
-    int degree = (PAGESIZE - sizeof(int)) / (GetKeySize(type) + sizeof(int));
+    int degree = (PAGESIZE - sizeof(int)) / (GetKeySize(type) + sizeof(int)*2+5);
     if (!(degree % 2))
         degree -= 1;
     return degree;
@@ -128,9 +130,9 @@ int IndexManager::GetDegree(int type) {
 
 int IndexManager::GetKeySize(int type) {
     if (type == TYPE_FLOAT)
-        return sizeof(float);
+        return sizeof(float)*2;
     else if (type == TYPE_INT)
-        return sizeof(int);
+        return sizeof(int)*2;
     else if (type > 0)
         return type;
     else {
@@ -223,21 +225,21 @@ int IndexManager::FindIndex(const string &file_path, data Data) {
             return -1;
         } else
             //找到则返回对应的键值
-            return itInt->second->SearchVal(Data.int_data);
+            return itInt->second->searchVal(Data.int_data);
     } else if (Data.type == TYPE_FLOAT) {
         auto itFloat = FloatMap_Index.find(file_path);
         if (itFloat == FloatMap_Index.end()) { //同上
             throw e_index_not_exist();
             return -1;
         } else
-            return itFloat->second->SearchVal(Data.float_data);
+            return itFloat->second->searchVal(Data.float_data);
     } else {
         auto itString = StringMap_Index.find(file_path);
         if (itString == StringMap_Index.end()) { //同上
             throw e_index_not_exist();
             return -1;
         } else
-            return itString->second->SearchVal(Data.char_data);
+            return itString->second->searchVal(Data.char_data);
     }
 }
 
@@ -247,13 +249,13 @@ void IndexManager::InsertIndex(string file_path, data Data, int block_id) {
 
     if (Data.type == TYPE_INT) {
         auto itInt = IntMap_Index.find(file_path);
-        itInt->second->InsertKey(Data.int_data, block_id);
+        itInt->second->insertKey(Data.int_data, block_id);
     } else if (Data.type == TYPE_FLOAT) {
         auto itFloat = FloatMap_Index.find(file_path);
-        itFloat->second->InsertKey(Data.float_data, block_id);
+        itFloat->second->insertKey(Data.float_data, block_id);
     } else {
         auto itString = StringMap_Index.find(file_path);
-        itString->second->InsertKey(Data.char_data, block_id);
+        itString->second->insertKey(Data.char_data, block_id);
     }
 }
 
@@ -267,21 +269,21 @@ void IndexManager::DeleteIndexByKey(const string &file_path, data Data) {
             throw e_index_not_exist();
             return;
         } else
-            itInt->second->DeleteKey(Data.int_data);
+            itInt->second->deleteKey(Data.int_data);
     } else if (Data.type == TYPE_FLOAT) {
         auto itFloat = FloatMap_Index.find(file_path);
         if (itFloat == FloatMap_Index.end()) {
             throw e_index_not_exist();
             return;
         } else
-            itFloat->second->DeleteKey(Data.float_data);
+            itFloat->second->deleteKey(Data.float_data);
     } else {
         auto itString = StringMap_Index.find(file_path);
         if (itString == StringMap_Index.end()) {
             throw e_index_not_exist();
             return;
         } else
-            itString->second->DeleteKey(Data.char_data);
+            itString->second->deleteKey(Data.char_data);
     }
 }
 
@@ -304,21 +306,21 @@ void IndexManager::SearchRange(const string &file_path, data Data1, data Data2, 
             throw e_index_not_exist();
             return;
         } else
-            itInt->second->SearchRange(Data1.int_data, Data2.int_data, vals, flag);
+            itInt->second->searchRange(Data1.int_data, Data2.int_data, vals, flag);
     } else if (Data1.type == TYPE_FLOAT) {
         auto itFloat = FloatMap_Index.find(file_path);
         if (itFloat == FloatMap_Index.end()) {
             throw e_index_not_exist();
             return;
         } else
-            itFloat->second->SearchRange(Data1.float_data, Data2.float_data, vals, flag);
+            itFloat->second->searchRange(Data1.float_data, Data2.float_data, vals, flag);
     } else {
         auto itString = StringMap_Index.find(file_path);
         if (itString == StringMap_Index.end()) {
             throw e_index_not_exist();
             return;
         } else
-            itString->second->SearchRange(Data1.char_data, Data2.char_data, vals, flag);
+            itString->second->searchRange(Data1.char_data, Data2.char_data, vals, flag);
     }
 }
 

@@ -12,7 +12,8 @@
 using namespace std;
 class IndexManager {
 public:
-    explicit IndexManager(string &table_name);
+//    IndexManager();
+    IndexManager(string &table_name);
     ~IndexManager();
     //创建索引文件及B + 树
     void CreateIndex(const string& file_path, int keytype);
