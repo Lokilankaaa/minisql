@@ -2,10 +2,12 @@
 // Created by 薛伟 on 2020/4/29.
 //
 
-#include "src/interpreter.h"
-#include "src/buffer_manager.h"
+#include "interpreter.h"
+#include "buffer_manager.h"
 
 BufferManager buf_manager;
+
+map<string, IndexManager*> im_map;
 
 int main(){
     Interpreter i;
